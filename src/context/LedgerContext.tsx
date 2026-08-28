@@ -77,7 +77,6 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(false);
 
-  // Filter state
   const [filters, setFilters] = useState<FilterState>({
     month: getCurrentMonth(),
     dateRange: null,
@@ -109,6 +108,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     localStorage.setItem(STORAGE_TX_KEY, JSON.stringify(transactions));
   }, [transactions]);
 
+  // Initial Sync & Realtime Channel Listener
   useEffect(() => {
     if (!isSupabaseConfigured()) {
       setIsRealtimeConnected(false);
@@ -118,24 +118,37 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (!supabase) return;
 
-    const fetchCloudData = async () => {
+    const syncWithCloud = async () => {
       try {
-        const { data: cloudCats } = await supabase.from('categories').select('*');
-        if (cloudCats && cloudCats.length > 0) {
+        // Fetch categories
+        const { data: cloudCats, error: catErr } = await supabase.from('categories').select('*');
+        if (catErr) {
+          console.warn('Supabase categories fetch error:', catErr);
+        } else if (cloudCats && cloudCats.length > 0) {
           setCategories(cloudCats);
+        } else {
+          // If cloud has 0 categories, seed current local categories into Supabase
+          await supabase.from('categories').upsert(categories);
         }
 
-        const { data: cloudTxs } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
-        if (cloudTxs && cloudTxs.length > 0) {
+        // Fetch transactions
+        const { data: cloudTxs, error: txErr } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+        if (txErr) {
+          console.warn('Supabase transactions fetch error:', txErr);
+        } else if (cloudTxs && cloudTxs.length > 0) {
           setTransactions(cloudTxs);
+        } else if (transactions.length > 0) {
+          // If cloud has 0 transactions, seed current local transactions into Supabase
+          await supabase.from('transactions').upsert(transactions);
         }
       } catch (err) {
-        console.warn('Supabase fetch error, fallback to local cache', err);
+        console.warn('Supabase initial sync error:', err);
       }
     };
 
-    fetchCloudData();
+    syncWithCloud();
 
+    // Supabase Realtime Subscription Channel
     const channel = supabase.channel('voca_realtime_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
         setIsRealtimeConnected(true);
@@ -228,9 +241,13 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const supabase = getSupabaseClient();
       if (supabase) {
         try {
-          await supabase.from('transactions').insert(newTxs).select();
+          const { error } = await supabase.from('transactions').upsert(newTxs);
+          if (error) {
+            console.error('Supabase upsert failed:', error);
+            addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase RLS 설정 또는 권한 오류: ${error.message}` });
+          }
         } catch (e) {
-          console.error('Supabase bulk insert failed', e);
+          console.error('Supabase bulk upsert failed', e);
         }
       }
     }
@@ -279,7 +296,11 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('transactions').insert([newTx]);
+        const { error } = await supabase.from('transactions').upsert([newTx]);
+        if (error) {
+          console.error('Supabase insert error:', error);
+          addToast({ type: 'warning', title: '클라우드 저장 경고', message: `Supabase DB 저장 실패: ${error.message}` });
+        }
       } catch (e) {
         console.error('Supabase single insert error', e);
       }
@@ -290,12 +311,25 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<boolean> => {
-    setTransactions(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+    let updatedTx: Transaction | null = null;
+    setTransactions(prev =>
+      prev.map(t => {
+        if (t.id === id) {
+          updatedTx = { ...t, ...updates };
+          return updatedTx;
+        }
+        return t;
+      })
+    );
 
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && updatedTx) {
       try {
-        await supabase.from('transactions').update(updates).eq('id', id);
+        const { error } = await supabase.from('transactions').upsert([updatedTx]);
+        if (error) {
+          console.error('Supabase upsert error:', error);
+          addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
+        }
       } catch (e) {
         console.error('Supabase update error', e);
       }
@@ -305,19 +339,23 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return true;
   };
 
-  // Toggle Expense Nature between '고정비' and '변동비'
   const toggleExpenseNature = async (id: string): Promise<boolean> => {
     const target = transactions.find(t => t.id === id);
     if (!target) return false;
 
     const newNature: ExpenseNature = target.expense_nature === '고정비' ? '변동비' : '고정비';
-    
-    setTransactions(prev => prev.map(t => (t.id === id ? { ...t, expense_nature: newNature } : t)));
+    const updatedTx = { ...target, expense_nature: newNature };
+
+    setTransactions(prev => prev.map(t => (t.id === id ? updatedTx : t)));
 
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('transactions').update({ expense_nature: newNature }).eq('id', id);
+        const { error } = await supabase.from('transactions').upsert([updatedTx]);
+        if (error) {
+          console.error('Supabase toggle nature error:', error);
+          addToast({ type: 'warning', title: '클라우드 변경 경고', message: `Supabase DB 변경 실패: ${error.message}` });
+        }
       } catch (e) {
         console.error('Supabase toggle expense nature error', e);
       }
@@ -339,7 +377,11 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('transactions').delete().eq('id', id);
+        const { error } = await supabase.from('transactions').delete().eq('id', id);
+        if (error) {
+          console.error('Supabase delete error:', error);
+          addToast({ type: 'warning', title: '클라우드 삭제 경고', message: `Supabase DB 삭제 실패: ${error.message}` });
+        }
       } catch (e) {
         console.error('Supabase delete error', e);
       }
@@ -355,7 +397,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('transactions').delete().in('id', ids);
+        const { error } = await supabase.from('transactions').delete().in('id', ids);
+        if (error) {
+          console.error('Supabase bulk delete error:', error);
+        }
       } catch (e) {
         console.error('Supabase bulk delete error', e);
       }
@@ -377,7 +422,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('categories').insert([newCat]);
+        await supabase.from('categories').upsert([newCat]);
       } catch (e) {
         console.error('Supabase add category error', e);
       }
@@ -388,16 +433,25 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>): Promise<boolean> => {
-    setCategories(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
+    let updatedCat: Category | null = null;
+    setCategories(prev =>
+      prev.map(c => {
+        if (c.id === id) {
+          updatedCat = { ...c, ...updates };
+          return updatedCat;
+        }
+        return c;
+      })
+    );
 
     if (updates.name) {
       setTransactions(prev => prev.map(t => (t.category_id === id ? { ...t, category: updates.name! } : t)));
     }
 
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && updatedCat) {
       try {
-        await supabase.from('categories').update(updates).eq('id', id);
+        await supabase.from('categories').upsert([updatedCat]);
         if (updates.name) {
           await supabase.from('transactions').update({ category: updates.name }).eq('category_id', id);
         }
@@ -497,7 +551,14 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTransactions(getInitialTransactions());
     localStorage.removeItem(STORAGE_CAT_KEY);
     localStorage.removeItem(STORAGE_TX_KEY);
-    addToast({ type: 'info', title: '샘플 데이터 복원', message: '초기 시연용 샘플 데이터로 복원되었습니다.' });
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      supabase.from('categories').upsert(DEFAULT_CATEGORIES);
+      supabase.from('transactions').upsert(getInitialTransactions());
+    }
+
+    addToast({ type: 'info', title: '샘플 데이터 복원', message: '초기 시연용 샘플 데이터로 복원 및 클라우드 동기화되었습니다.' });
   };
 
   return (

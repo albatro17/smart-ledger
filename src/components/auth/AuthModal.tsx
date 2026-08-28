@@ -46,7 +46,11 @@ CREATE TABLE IF NOT EXISTS public.transactions (
     CONSTRAINT unique_user_transaction_hash UNIQUE (user_id, unique_hash)
 );
 
--- 3. Enable Supabase Realtime
+-- 3. Disable RLS for public shared house ledger
+ALTER TABLE public.categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.transactions DISABLE ROW LEVEL SECURITY;
+
+-- 4. Enable Supabase Realtime for Multi-device sync
 ALTER PUBLICATION supabase_realtime ADD TABLE public.categories;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.transactions;`;
 
