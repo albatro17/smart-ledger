@@ -49,12 +49,52 @@ const LedgerContext = createContext<LedgerContextType | undefined>(undefined);
 const STORAGE_CAT_KEY = 'voca_ledger_categories_v2';
 const STORAGE_TX_KEY = 'voca_ledger_transactions_v2';
 
+const LEGACY_CAT_ID_MAP: Record<string, string> = {
+  'cat-food': '00000000-0000-0000-0000-000000000001',
+  'cat-transport': '00000000-0000-0000-0000-000000000002',
+  'cat-housing': '00000000-0000-0000-0000-000000000003',
+  'cat-shopping': '00000000-0000-0000-0000-000000000004',
+  'cat-culture': '00000000-0000-0000-0000-000000000005',
+  'cat-medical': '00000000-0000-0000-0000-000000000006',
+  'cat-salary': '00000000-0000-0000-0000-000000000007',
+  'cat-extra-income': '00000000-0000-0000-0000-000000000008',
+  'cat-transfer': '00000000-0000-0000-0000-000000000009',
+  'cat-uncategorized': '00000000-0000-0000-0000-000000000010',
+};
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function sanitizeCategory(c: Category): Category {
+  let validId = c.id;
+  if (LEGACY_CAT_ID_MAP[c.id]) {
+    validId = LEGACY_CAT_ID_MAP[c.id];
+  } else if (!UUID_REGEX.test(c.id)) {
+    validId = generateUUID();
+  }
+  return { ...c, id: validId };
+}
+
+function sanitizeTransaction(t: Transaction): Transaction {
+  let validId = t.id;
+  if (!UUID_REGEX.test(t.id)) {
+    validId = generateUUID();
+  }
+  let validCatId = t.category_id;
+  if (validCatId && LEGACY_CAT_ID_MAP[validCatId]) {
+    validCatId = LEGACY_CAT_ID_MAP[validCatId];
+  } else if (validCatId && !UUID_REGEX.test(validCatId)) {
+    validCatId = null;
+  }
+  return { ...t, id: validId, category_id: validCatId };
+}
+
 export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>(() => {
     const saved = localStorage.getItem(STORAGE_CAT_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Category[] = JSON.parse(saved);
+        return parsed.map(sanitizeCategory);
       } catch (e) {
         console.error('Failed to parse saved categories', e);
       }
@@ -66,7 +106,8 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const saved = localStorage.getItem(STORAGE_TX_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed: Transaction[] = JSON.parse(saved);
+        return parsed.map(sanitizeTransaction);
       } catch (e) {
         console.error('Failed to parse saved transactions', e);
       }
@@ -125,10 +166,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (catErr) {
           console.warn('Supabase categories fetch error:', catErr);
         } else if (cloudCats && cloudCats.length > 0) {
-          setCategories(cloudCats);
+          setCategories(cloudCats.map(sanitizeCategory));
         } else {
           // If cloud has 0 categories, seed current local categories into Supabase
-          await supabase.from('categories').upsert(categories);
+          await supabase.from('categories').upsert(categories.map(sanitizeCategory));
         }
 
         // Fetch transactions
@@ -136,10 +177,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (txErr) {
           console.warn('Supabase transactions fetch error:', txErr);
         } else if (cloudTxs && cloudTxs.length > 0) {
-          setTransactions(cloudTxs);
+          setTransactions(cloudTxs.map(sanitizeTransaction));
         } else if (transactions.length > 0) {
           // If cloud has 0 transactions, seed current local transactions into Supabase
-          await supabase.from('transactions').upsert(transactions);
+          await supabase.from('transactions').upsert(transactions.map(sanitizeTransaction));
         }
       } catch (err) {
         console.warn('Supabase initial sync error:', err);
@@ -153,10 +194,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
         setIsRealtimeConnected(true);
         if (payload.eventType === 'INSERT') {
-          const newTx = payload.new as Transaction;
+          const newTx = sanitizeTransaction(payload.new as Transaction);
           setTransactions(prev => [newTx, ...prev.filter(t => t.id !== newTx.id && t.unique_hash !== newTx.unique_hash)]);
         } else if (payload.eventType === 'UPDATE') {
-          const updatedTx = payload.new as Transaction;
+          const updatedTx = sanitizeTransaction(payload.new as Transaction);
           setTransactions(prev => prev.map(t => (t.id === updatedTx.id ? updatedTx : t)));
         } else if (payload.eventType === 'DELETE') {
           const deletedId = payload.old.id;
@@ -166,10 +207,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, (payload) => {
         setIsRealtimeConnected(true);
         if (payload.eventType === 'INSERT') {
-          const newCat = payload.new as Category;
+          const newCat = sanitizeCategory(payload.new as Category);
           setCategories(prev => [...prev.filter(c => c.id !== newCat.id), newCat]);
         } else if (payload.eventType === 'UPDATE') {
-          const updatedCat = payload.new as Category;
+          const updatedCat = sanitizeCategory(payload.new as Category);
           setCategories(prev => prev.map(c => (c.id === updatedCat.id ? updatedCat : c)));
         } else if (payload.eventType === 'DELETE') {
           const deletedId = payload.old.id;
@@ -213,9 +254,16 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       } else {
         addedCount++;
         const nature = row.expense_nature || inferExpenseNature(row.category, row.description);
+        let validCatId = row.category_id || null;
+        if (validCatId && LEGACY_CAT_ID_MAP[validCatId]) {
+          validCatId = LEGACY_CAT_ID_MAP[validCatId];
+        } else if (validCatId && !UUID_REGEX.test(validCatId)) {
+          validCatId = null;
+        }
+
         const newTx: Transaction = {
           id: generateUUID(),
-          category_id: row.category_id || null,
+          category_id: validCatId,
           category: row.category || '미분류',
           transaction_date: row.transaction_date,
           transaction_time: row.transaction_time || '12:00:00',
@@ -244,7 +292,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const { error } = await supabase.from('transactions').upsert(newTxs);
           if (error) {
             console.error('Supabase upsert failed:', error);
-            addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase RLS 설정 또는 권한 오류: ${error.message}` });
+            addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase DB 오류: ${error.message}` });
           }
         } catch (e) {
           console.error('Supabase bulk upsert failed', e);
@@ -272,9 +320,16 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const catName = txData.category || classification.categoryName || '미분류';
     const nature = txData.expense_nature || inferExpenseNature(catName, txData.description);
 
+    let validCatId = txData.category_id || classification.categoryId || null;
+    if (validCatId && LEGACY_CAT_ID_MAP[validCatId]) {
+      validCatId = LEGACY_CAT_ID_MAP[validCatId];
+    } else if (validCatId && !UUID_REGEX.test(validCatId)) {
+      validCatId = null;
+    }
+
     const newTx: Transaction = {
       id: generateUUID(),
-      category_id: txData.category_id || classification.categoryId || null,
+      category_id: validCatId,
       category: catName,
       transaction_date: txData.transaction_date,
       transaction_time: txData.transaction_time || '12:00:00',
@@ -311,19 +366,13 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<boolean> => {
-    let updatedTx: Transaction | null = null;
-    setTransactions(prev =>
-      prev.map(t => {
-        if (t.id === id) {
-          updatedTx = { ...t, ...updates };
-          return updatedTx;
-        }
-        return t;
-      })
-    );
+    const existingTx = transactions.find(t => t.id === id);
+    const updatedTx = sanitizeTransaction(existingTx ? { ...existingTx, ...updates } : ({ id, ...updates } as Transaction));
+
+    setTransactions(prev => prev.map(t => (t.id === id ? updatedTx : t)));
 
     const supabase = getSupabaseClient();
-    if (supabase && updatedTx) {
+    if (supabase) {
       try {
         const { error } = await supabase.from('transactions').upsert([updatedTx]);
         if (error) {
@@ -344,7 +393,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!target) return false;
 
     const newNature: ExpenseNature = target.expense_nature === '고정비' ? '변동비' : '고정비';
-    const updatedTx = { ...target, expense_nature: newNature };
+    const updatedTx = sanitizeTransaction({ ...target, expense_nature: newNature });
 
     setTransactions(prev => prev.map(t => (t.id === id ? updatedTx : t)));
 
@@ -375,7 +424,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setTransactions(prev => prev.filter(t => t.id !== id));
 
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && target && UUID_REGEX.test(id)) {
       try {
         const { error } = await supabase.from('transactions').delete().eq('id', id);
         if (error) {
@@ -394,10 +443,11 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const bulkDeleteTransactions = async (ids: string[]): Promise<boolean> => {
     setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
 
+    const validUuids = ids.filter(id => UUID_REGEX.test(id));
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && validUuids.length > 0) {
       try {
-        const { error } = await supabase.from('transactions').delete().in('id', ids);
+        const { error } = await supabase.from('transactions').delete().in('id', validUuids);
         if (error) {
           console.error('Supabase bulk delete error:', error);
         }
@@ -433,27 +483,37 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>): Promise<boolean> => {
-    let updatedCat: Category | null = null;
-    setCategories(prev =>
-      prev.map(c => {
-        if (c.id === id) {
-          updatedCat = { ...c, ...updates };
-          return updatedCat;
-        }
-        return c;
-      })
+    const existingCat = categories.find(c => c.id === id);
+    const updatedCat = sanitizeCategory(
+      existingCat
+        ? { ...existingCat, ...updates }
+        : {
+            id,
+            name: updates.name || '',
+            type: updates.type || '지출',
+            icon: '🏷️',
+            color: '#3B82F6',
+            keywords: [],
+            is_default: false,
+            created_at: new Date().toISOString(),
+          }
     );
+
+    setCategories(prev => prev.map(c => (c.id === id ? updatedCat : c)));
 
     if (updates.name) {
       setTransactions(prev => prev.map(t => (t.category_id === id ? { ...t, category: updates.name! } : t)));
     }
 
     const supabase = getSupabaseClient();
-    if (supabase && updatedCat) {
+    if (supabase) {
       try {
-        await supabase.from('categories').upsert([updatedCat]);
-        if (updates.name) {
-          await supabase.from('transactions').update({ category: updates.name }).eq('category_id', id);
+        const { error } = await supabase.from('categories').upsert([updatedCat]);
+        if (error) {
+          console.error('Supabase update category error:', error);
+          addToast({ type: 'warning', title: '카테고리 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
+        } else if (updates.name && UUID_REGEX.test(updatedCat.id)) {
+          await supabase.from('transactions').update({ category: updates.name }).eq('category_id', updatedCat.id);
         }
       } catch (e) {
         console.error('Supabase update category error', e);
@@ -496,9 +556,11 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCategories(prev => prev.filter(c => c.id !== id));
 
     const supabase = getSupabaseClient();
-    if (supabase) {
+    if (supabase && UUID_REGEX.test(id)) {
       try {
-        await supabase.from('transactions').update({ category_id: targetCatId, category: targetCatName }).eq('category_id', id);
+        if (targetCatId && UUID_REGEX.test(targetCatId)) {
+          await supabase.from('transactions').update({ category_id: targetCatId, category: targetCatName }).eq('category_id', id);
+        }
         await supabase.from('categories').delete().eq('id', id);
       } catch (e) {
         console.error('Supabase delete category error', e);
