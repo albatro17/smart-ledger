@@ -1,9 +1,10 @@
 import type { Category, Transaction, ExpenseNature } from '../types';
 import { generateTransactionHash } from './deduplication';
+import { generateUUID } from './utils';
 
 export const DEFAULT_CATEGORIES: Category[] = [
   {
-    id: 'cat-food',
+    id: '00000000-0000-0000-0000-000000000001',
     name: '식비',
     type: '지출',
     icon: '🍔',
@@ -14,7 +15,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-transport',
+    id: '00000000-0000-0000-0000-000000000002',
     name: '교통/차량',
     type: '지출',
     icon: '🚗',
@@ -25,7 +26,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-housing',
+    id: '00000000-0000-0000-0000-000000000003',
     name: '주거/통신',
     type: '지출',
     icon: '🏠',
@@ -36,7 +37,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-shopping',
+    id: '00000000-0000-0000-0000-000000000004',
     name: '쇼핑/생활',
     type: '지출',
     icon: '🛍️',
@@ -47,7 +48,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-culture',
+    id: '00000000-0000-0000-0000-000000000005',
     name: '취미/여가',
     type: '지출',
     icon: '🎮',
@@ -58,7 +59,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-medical',
+    id: '00000000-0000-0000-0000-000000000006',
     name: '의료/건강',
     type: '지출',
     icon: '🏥',
@@ -69,7 +70,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-salary',
+    id: '00000000-0000-0000-0000-000000000007',
     name: '급여/월급',
     type: '수입',
     icon: '💰',
@@ -79,7 +80,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-extra-income',
+    id: '00000000-0000-0000-0000-000000000008',
     name: '부수입/용돈',
     type: '수입',
     icon: '✨',
@@ -89,7 +90,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-transfer',
+    id: '00000000-0000-0000-0000-000000000009',
     name: '이체/저축',
     type: '이체',
     icon: '🏦',
@@ -100,7 +101,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     created_at: new Date().toISOString(),
   },
   {
-    id: 'cat-uncategorized',
+    id: '00000000-0000-0000-0000-000000000010',
     name: '미분류',
     type: '지출',
     icon: '❓',
@@ -149,7 +150,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '8월분 주식회사 에이아이 급여입금',
       amount: 4500000,
       category: '급여/월급',
-      catId: 'cat-salary',
+      catId: '00000000-0000-0000-0000-000000000007',
       account: '계좌',
       nature: '변동비' as ExpenseNature,
     },
@@ -161,7 +162,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '스타벅스 강남 R점',
       amount: 6800,
       category: '식비',
-      catId: 'cat-food',
+      catId: '00000000-0000-0000-0000-000000000001',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -173,7 +174,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '배달의민족 (마라탕 & 계란볶음밥)',
       amount: 24500,
       category: '식비',
-      catId: 'cat-food',
+      catId: '00000000-0000-0000-0000-000000000001',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -185,7 +186,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '서울교통공사 버스지하철 K-패스 환급',
       amount: 62000,
       category: '교통/차량',
-      catId: 'cat-transport',
+      catId: '00000000-0000-0000-0000-000000000002',
       account: '카드',
       nature: '고정비' as ExpenseNature,
     },
@@ -197,7 +198,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '쿠팡 로켓프레시 장보기',
       amount: 58900,
       category: '쇼핑/생활',
-      catId: 'cat-shopping',
+      catId: '00000000-0000-0000-0000-000000000004',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -209,7 +210,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '아파트 관리비 자동이체',
       amount: 215000,
       category: '주거/통신',
-      catId: 'cat-housing',
+      catId: '00000000-0000-0000-0000-000000000003',
       account: '계좌',
       nature: '고정비' as ExpenseNature,
     },
@@ -221,7 +222,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '넷플릭스 프리미엄 월간 결제',
       amount: 17000,
       category: '취미/여가',
-      catId: 'cat-culture',
+      catId: '00000000-0000-0000-0000-000000000005',
       account: '카드',
       nature: '고정비' as ExpenseNature,
     },
@@ -233,7 +234,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '올리브영 강남본점',
       amount: 34200,
       category: '쇼핑/생활',
-      catId: 'cat-shopping',
+      catId: '00000000-0000-0000-0000-000000000004',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -245,7 +246,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '서울내과의원 진료비',
       amount: 15400,
       category: '의료/건강',
-      catId: 'cat-medical',
+      catId: '00000000-0000-0000-0000-000000000006',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -257,7 +258,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '당근마켓 중고 모니터 판매',
       amount: 120000,
       category: '부수입/용돈',
-      catId: 'cat-extra-income',
+      catId: '00000000-0000-0000-0000-000000000008',
       account: '계좌',
       nature: '변동비' as ExpenseNature,
     },
@@ -269,7 +270,7 @@ export function getInitialTransactions(): Transaction[] {
       desc: '스시히로바 초밥 식사',
       amount: 87000,
       category: '식비',
-      catId: 'cat-food',
+      catId: '00000000-0000-0000-0000-000000000001',
       account: '카드',
       nature: '변동비' as ExpenseNature,
     },
@@ -281,13 +282,13 @@ export function getInitialTransactions(): Transaction[] {
       desc: '청년희망적금 8월분 자동이체',
       amount: 500000,
       category: '이체/저축',
-      catId: 'cat-transfer',
+      catId: '00000000-0000-0000-0000-000000000009',
       account: '계좌',
       nature: '고정비' as ExpenseNature,
     },
   ];
 
-  return rawList.map((item, idx) => {
+  return rawList.map((item) => {
     const hash = generateTransactionHash(
       item.date,
       item.time,
@@ -296,7 +297,7 @@ export function getInitialTransactions(): Transaction[] {
       item.desc
     );
     return {
-      id: `tx-init-${idx + 1}`,
+      id: generateUUID(),
       category_id: item.catId,
       category: item.category,
       transaction_date: item.date,
@@ -309,7 +310,7 @@ export function getInitialTransactions(): Transaction[] {
       amount: item.amount,
       payment_type: '일시불',
       approval_status: '정상',
-      memo: idx % 3 === 0 ? '자동분류 및 엑셀 확인 완료' : '',
+      memo: '기본 샘플 내역',
       unique_hash: hash,
       created_at: new Date().toISOString(),
     };

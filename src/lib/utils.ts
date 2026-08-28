@@ -7,6 +7,18 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Generate valid RFC4122 v4 UUID string for Supabase PostgreSQL UUID primary key compat
+export function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 // Format numbers as Korean Won with explicit + / - sign for clarity
 export function formatCurrency(amount: number, flowType?: string, showSymbol = true): string {
   const formatted = new Intl.NumberFormat('ko-KR').format(Math.abs(amount));

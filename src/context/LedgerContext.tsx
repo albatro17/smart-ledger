@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import type { Category, Transaction, FilterState, ParsedTransaction, ExpenseNature } from '../types';
 import { DEFAULT_CATEGORIES, getInitialTransactions, inferExpenseNature } from '../lib/defaultData';
-import { getCurrentMonth } from '../lib/utils';
+import { getCurrentMonth, generateUUID } from '../lib/utils';
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
 import { autoClassifyTransaction } from '../lib/autoClassifier';
 
@@ -207,18 +207,18 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     let duplicateCount = 0;
     const newTxs: Transaction[] = [];
 
-    rows.forEach((row, idx) => {
+    rows.forEach((row) => {
       if (existingHashes.has(row.unique_hash)) {
         duplicateCount++;
       } else {
         addedCount++;
         const nature = row.expense_nature || inferExpenseNature(row.category, row.description);
         const newTx: Transaction = {
-          id: `tx-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+          id: generateUUID(),
           category_id: row.category_id || null,
           category: row.category || '미분류',
           transaction_date: row.transaction_date,
-          transaction_time: row.transaction_time || '',
+          transaction_time: row.transaction_time || '12:00:00',
           flow_type: row.flow_type,
           expense_nature: nature,
           account_type: row.account_type || '카드',
@@ -273,7 +273,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const nature = txData.expense_nature || inferExpenseNature(catName, txData.description);
 
     const newTx: Transaction = {
-      id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       category_id: txData.category_id || classification.categoryId || null,
       category: catName,
       transaction_date: txData.transaction_date,
@@ -413,7 +413,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addCategory = async (cat: Omit<Category, 'id' | 'created_at'>): Promise<boolean> => {
     const newCat: Category = {
       ...cat,
-      id: `cat-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       created_at: new Date().toISOString(),
     };
 
