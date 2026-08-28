@@ -1,0 +1,540 @@
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import type { Category, Transaction, FilterState, ParsedTransaction, ExpenseNature } from '../types';
+import { DEFAULT_CATEGORIES, getInitialTransactions, inferExpenseNature } from '../lib/defaultData';
+import { getCurrentMonth } from '../lib/utils';
+import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
+import { autoClassifyTransaction } from '../lib/autoClassifier';
+
+export interface ToastMessage {
+  id: string;
+  type: 'success' | 'warning' | 'info' | 'error';
+  title: string;
+  message: string;
+}
+
+interface LedgerContextType {
+  categories: Category[];
+  transactions: Transaction[];
+  filters: FilterState;
+  toasts: ToastMessage[];
+  isRealtimeConnected: boolean;
+  setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
+  resetFilters: () => void;
+  
+  // Transaction actions
+  addTransactions: (rows: ParsedTransaction[]) => Promise<{ addedCount: number; duplicateCount: number }>;
+  addSingleTransaction: (txData: Partial<Transaction>) => Promise<boolean>;
+  updateTransaction: (id: string, updates: Partial<Transaction>) => Promise<boolean>;
+  toggleExpenseNature: (id: string) => Promise<boolean>;
+  deleteTransaction: (id: string) => Promise<boolean>;
+  bulkDeleteTransactions: (ids: string[]) => Promise<boolean>;
+  
+  // Category actions
+  addCategory: (cat: Omit<Category, 'id' | 'created_at'>) => Promise<boolean>;
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<boolean>;
+  deleteCategory: (id: string, reassignCategoryId?: string) => Promise<boolean>;
+  updateCategoryKeywords: (categoryId: string, keywords: string[]) => Promise<boolean>;
+  reRunAutoClassification: () => void;
+  
+  // Toast notifications
+  addToast: (toast: Omit<ToastMessage, 'id'>) => void;
+  removeToast: (id: string) => void;
+  
+  // Demo reset
+  resetToSampleData: () => void;
+}
+
+const LedgerContext = createContext<LedgerContextType | undefined>(undefined);
+
+const STORAGE_CAT_KEY = 'voca_ledger_categories_v2';
+const STORAGE_TX_KEY = 'voca_ledger_transactions_v2';
+
+export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const saved = localStorage.getItem(STORAGE_CAT_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved categories', e);
+      }
+    }
+    return DEFAULT_CATEGORIES;
+  });
+
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    const saved = localStorage.getItem(STORAGE_TX_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved transactions', e);
+      }
+    }
+    return getInitialTransactions();
+  });
+
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(false);
+
+  // Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    month: getCurrentMonth(),
+    dateRange: null,
+    flowType: 'ALL',
+    expenseNature: 'ALL',
+    paymentMethod: 'ALL',
+    categoryId: 'ALL',
+    searchQuery: '',
+    sortBy: 'date_desc',
+  });
+
+  const addToast = (toast: Omit<ToastMessage, 'id'>) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
+    setToasts(prev => [...prev, { ...toast, id }]);
+    setTimeout(() => {
+      removeToast(id);
+    }, 4500);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_CAT_KEY, JSON.stringify(categories));
+  }, [categories]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_TX_KEY, JSON.stringify(transactions));
+  }, [transactions]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setIsRealtimeConnected(false);
+      return;
+    }
+
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    const fetchCloudData = async () => {
+      try {
+        const { data: cloudCats } = await supabase.from('categories').select('*');
+        if (cloudCats && cloudCats.length > 0) {
+          setCategories(cloudCats);
+        }
+
+        const { data: cloudTxs } = await supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+        if (cloudTxs && cloudTxs.length > 0) {
+          setTransactions(cloudTxs);
+        }
+      } catch (err) {
+        console.warn('Supabase fetch error, fallback to local cache', err);
+      }
+    };
+
+    fetchCloudData();
+
+    const channel = supabase.channel('voca_realtime_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, (payload) => {
+        setIsRealtimeConnected(true);
+        if (payload.eventType === 'INSERT') {
+          const newTx = payload.new as Transaction;
+          setTransactions(prev => [newTx, ...prev.filter(t => t.id !== newTx.id && t.unique_hash !== newTx.unique_hash)]);
+        } else if (payload.eventType === 'UPDATE') {
+          const updatedTx = payload.new as Transaction;
+          setTransactions(prev => prev.map(t => (t.id === updatedTx.id ? updatedTx : t)));
+        } else if (payload.eventType === 'DELETE') {
+          const deletedId = payload.old.id;
+          setTransactions(prev => prev.filter(t => t.id !== deletedId));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, (payload) => {
+        setIsRealtimeConnected(true);
+        if (payload.eventType === 'INSERT') {
+          const newCat = payload.new as Category;
+          setCategories(prev => [...prev.filter(c => c.id !== newCat.id), newCat]);
+        } else if (payload.eventType === 'UPDATE') {
+          const updatedCat = payload.new as Category;
+          setCategories(prev => prev.map(c => (c.id === updatedCat.id ? updatedCat : c)));
+        } else if (payload.eventType === 'DELETE') {
+          const deletedId = payload.old.id;
+          setCategories(prev => prev.filter(c => c.id !== deletedId));
+        }
+      })
+      .subscribe((status) => {
+        setIsRealtimeConnected(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const resetFilters = () => {
+    setFilters({
+      month: getCurrentMonth(),
+      dateRange: null,
+      flowType: 'ALL',
+      expenseNature: 'ALL',
+      paymentMethod: 'ALL',
+      categoryId: 'ALL',
+      searchQuery: '',
+      sortBy: 'date_desc',
+    });
+  };
+
+  const existingHashes = useMemo(() => {
+    return new Set(transactions.map(t => t.unique_hash));
+  }, [transactions]);
+
+  const addTransactions = async (rows: ParsedTransaction[]) => {
+    let addedCount = 0;
+    let duplicateCount = 0;
+    const newTxs: Transaction[] = [];
+
+    rows.forEach((row, idx) => {
+      if (existingHashes.has(row.unique_hash)) {
+        duplicateCount++;
+      } else {
+        addedCount++;
+        const nature = row.expense_nature || inferExpenseNature(row.category, row.description);
+        const newTx: Transaction = {
+          id: `tx-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+          category_id: row.category_id || null,
+          category: row.category || '미분류',
+          transaction_date: row.transaction_date,
+          transaction_time: row.transaction_time || '',
+          flow_type: row.flow_type,
+          expense_nature: nature,
+          account_type: row.account_type || '카드',
+          payment_method: row.payment_method || '통합 결제수단',
+          description: row.description,
+          amount: row.amount,
+          payment_type: row.payment_type || '일시불',
+          approval_status: row.approval_status || '정상',
+          memo: row.memo || '',
+          unique_hash: row.unique_hash,
+          created_at: new Date().toISOString(),
+        };
+        newTxs.push(newTx);
+      }
+    });
+
+    if (newTxs.length > 0) {
+      setTransactions(prev => [...newTxs, ...prev]);
+
+      const supabase = getSupabaseClient();
+      if (supabase) {
+        try {
+          await supabase.from('transactions').insert(newTxs).select();
+        } catch (e) {
+          console.error('Supabase bulk insert failed', e);
+        }
+      }
+    }
+
+    addToast({
+      type: addedCount > 0 ? 'success' : 'info',
+      title: '엑셀/CSV 업로드 완료',
+      message: `신규 ${addedCount}건이 등록되었고, 중복 ${duplicateCount}건은 제외되었습니다.`,
+    });
+
+    return { addedCount, duplicateCount };
+  };
+
+  const addSingleTransaction = async (txData: Partial<Transaction>): Promise<boolean> => {
+    if (!txData.description || !txData.amount || !txData.transaction_date) {
+      addToast({ type: 'error', title: '입력 오류', message: '날짜, 거래내역, 금액은 필수 입력 항목입니다.' });
+      return false;
+    }
+
+    const flowType = txData.flow_type || '지출';
+    const classification = autoClassifyTransaction(txData.description, categories, flowType);
+    const catName = txData.category || classification.categoryName || '미분류';
+    const nature = txData.expense_nature || inferExpenseNature(catName, txData.description);
+
+    const newTx: Transaction = {
+      id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      category_id: txData.category_id || classification.categoryId || null,
+      category: catName,
+      transaction_date: txData.transaction_date,
+      transaction_time: txData.transaction_time || '12:00:00',
+      flow_type: flowType,
+      expense_nature: nature,
+      account_type: txData.account_type || '카드',
+      payment_method: txData.payment_method || '현금/기타',
+      description: txData.description,
+      amount: Number(txData.amount),
+      payment_type: txData.payment_type || '일시불',
+      approval_status: txData.approval_status || '정상',
+      memo: txData.memo || '',
+      unique_hash: txData.unique_hash || `manual-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      created_at: new Date().toISOString(),
+    };
+
+    setTransactions(prev => [newTx, ...prev]);
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').insert([newTx]);
+      } catch (e) {
+        console.error('Supabase single insert error', e);
+      }
+    }
+
+    addToast({ type: 'success', title: '등록 완료', message: `'${newTx.description}' 거래내역이 추가되었습니다.` });
+    return true;
+  };
+
+  const updateTransaction = async (id: string, updates: Partial<Transaction>): Promise<boolean> => {
+    setTransactions(prev => prev.map(t => (t.id === id ? { ...t, ...updates } : t)));
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').update(updates).eq('id', id);
+      } catch (e) {
+        console.error('Supabase update error', e);
+      }
+    }
+
+    addToast({ type: 'info', title: '수정 완료', message: '거래내역 정보가 업데이트되었습니다.' });
+    return true;
+  };
+
+  // Toggle Expense Nature between '고정비' and '변동비'
+  const toggleExpenseNature = async (id: string): Promise<boolean> => {
+    const target = transactions.find(t => t.id === id);
+    if (!target) return false;
+
+    const newNature: ExpenseNature = target.expense_nature === '고정비' ? '변동비' : '고정비';
+    
+    setTransactions(prev => prev.map(t => (t.id === id ? { ...t, expense_nature: newNature } : t)));
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').update({ expense_nature: newNature }).eq('id', id);
+      } catch (e) {
+        console.error('Supabase toggle expense nature error', e);
+      }
+    }
+
+    addToast({
+      type: 'info',
+      title: '지출 성격 변경',
+      message: `'${target.description}' 항목이 [${newNature}](으)로 변경되었습니다.`,
+    });
+
+    return true;
+  };
+
+  const deleteTransaction = async (id: string): Promise<boolean> => {
+    const target = transactions.find(t => t.id === id);
+    setTransactions(prev => prev.filter(t => t.id !== id));
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').delete().eq('id', id);
+      } catch (e) {
+        console.error('Supabase delete error', e);
+      }
+    }
+
+    addToast({ type: 'info', title: '삭제 완료', message: `'${target?.description || '선택한 내역'}' 항목이 삭제되었습니다.` });
+    return true;
+  };
+
+  const bulkDeleteTransactions = async (ids: string[]): Promise<boolean> => {
+    setTransactions(prev => prev.filter(t => !ids.includes(t.id)));
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').delete().in('id', ids);
+      } catch (e) {
+        console.error('Supabase bulk delete error', e);
+      }
+    }
+
+    addToast({ type: 'info', title: '일괄 삭제 완료', message: `${ids.length}건의 거래내역이 삭제되었습니다.` });
+    return true;
+  };
+
+  const addCategory = async (cat: Omit<Category, 'id' | 'created_at'>): Promise<boolean> => {
+    const newCat: Category = {
+      ...cat,
+      id: `cat-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      created_at: new Date().toISOString(),
+    };
+
+    setCategories(prev => [...prev, newCat]);
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('categories').insert([newCat]);
+      } catch (e) {
+        console.error('Supabase add category error', e);
+      }
+    }
+
+    addToast({ type: 'success', title: '카테고리 추가', message: `'${newCat.name}' 카테고리가 생성되었습니다.` });
+    return true;
+  };
+
+  const updateCategory = async (id: string, updates: Partial<Category>): Promise<boolean> => {
+    setCategories(prev => prev.map(c => (c.id === id ? { ...c, ...updates } : c)));
+
+    if (updates.name) {
+      setTransactions(prev => prev.map(t => (t.category_id === id ? { ...t, category: updates.name! } : t)));
+    }
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('categories').update(updates).eq('id', id);
+        if (updates.name) {
+          await supabase.from('transactions').update({ category: updates.name }).eq('category_id', id);
+        }
+      } catch (e) {
+        console.error('Supabase update category error', e);
+      }
+    }
+
+    addToast({ type: 'info', title: '카테고리 수정', message: '카테고리 정보가 업데이트되었습니다.' });
+    return true;
+  };
+
+  const deleteCategory = async (id: string, reassignCategoryId?: string): Promise<boolean> => {
+    const catToDelete = categories.find(c => c.id === id);
+    if (!catToDelete) return false;
+
+    let targetCatName = '미분류';
+    let targetCatId: string | null = null;
+
+    if (reassignCategoryId) {
+      const targetCat = categories.find(c => c.id === reassignCategoryId);
+      if (targetCat) {
+        targetCatName = targetCat.name;
+        targetCatId = targetCat.id;
+      }
+    } else {
+      const uncategorized = categories.find(c => c.name === '미분류');
+      if (uncategorized) {
+        targetCatId = uncategorized.id;
+      }
+    }
+
+    setTransactions(prev =>
+      prev.map(t => {
+        if (t.category_id === id || t.category === catToDelete.name) {
+          return { ...t, category_id: targetCatId, category: targetCatName };
+        }
+        return t;
+      })
+    );
+
+    setCategories(prev => prev.filter(c => c.id !== id));
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        await supabase.from('transactions').update({ category_id: targetCatId, category: targetCatName }).eq('category_id', id);
+        await supabase.from('categories').delete().eq('id', id);
+      } catch (e) {
+        console.error('Supabase delete category error', e);
+      }
+    }
+
+    addToast({
+      type: 'warning',
+      title: '카테고리 삭제',
+      message: `'${catToDelete.name}' 카테고리가 삭제되었으며, 관련 내역은 '${targetCatName}'(으)로 이동되었습니다.`,
+    });
+
+    return true;
+  };
+
+  const updateCategoryKeywords = async (categoryId: string, keywords: string[]): Promise<boolean> => {
+    const cleanKws = keywords.map(k => k.trim()).filter(Boolean);
+    return updateCategory(categoryId, { keywords: cleanKws });
+  };
+
+  const reRunAutoClassification = () => {
+    let reclassifiedCount = 0;
+    setTransactions(prev =>
+      prev.map(tx => {
+        if (!tx.category_id || tx.category === '미분류') {
+          const res = autoClassifyTransaction(tx.description, categories, tx.flow_type);
+          if (res.isAutoClassified) {
+            reclassifiedCount++;
+            return {
+              ...tx,
+              category_id: res.categoryId,
+              category: res.categoryName,
+              expense_nature: inferExpenseNature(res.categoryName, tx.description),
+            };
+          }
+        }
+        return tx;
+      })
+    );
+
+    addToast({
+      type: 'success',
+      title: '자동 재분류 완료',
+      message: `${reclassifiedCount}건의 내역이 새 키워드 룰셋에 따라 카테고리로 자동 분류되었습니다.`,
+    });
+  };
+
+  const resetToSampleData = () => {
+    setCategories(DEFAULT_CATEGORIES);
+    setTransactions(getInitialTransactions());
+    localStorage.removeItem(STORAGE_CAT_KEY);
+    localStorage.removeItem(STORAGE_TX_KEY);
+    addToast({ type: 'info', title: '샘플 데이터 복원', message: '초기 시연용 샘플 데이터로 복원되었습니다.' });
+  };
+
+  return (
+    <LedgerContext.Provider
+      value={{
+        categories,
+        transactions,
+        filters,
+        toasts,
+        isRealtimeConnected,
+        setFilters,
+        resetFilters,
+        addTransactions,
+        addSingleTransaction,
+        updateTransaction,
+        toggleExpenseNature,
+        deleteTransaction,
+        bulkDeleteTransactions,
+        addCategory,
+        updateCategory,
+        deleteCategory,
+        updateCategoryKeywords,
+        reRunAutoClassification,
+        addToast,
+        removeToast,
+        resetToSampleData,
+      }}
+    >
+      {children}
+    </LedgerContext.Provider>
+  );
+};
+
+export const useLedger = () => {
+  const context = useContext(LedgerContext);
+  if (!context) {
+    throw new Error('useLedger must be used within a LedgerProvider');
+  }
+  return context;
+};
