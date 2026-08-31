@@ -4,6 +4,7 @@ import { DEFAULT_CATEGORIES, getInitialTransactions, inferExpenseNature } from '
 import { getCurrentMonth, generateUUID } from '../lib/utils';
 import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
 import { autoClassifyTransaction } from '../lib/autoClassifier';
+import { syncCloudSecuritySettings, saveSecuritySettingsCloud } from '../components/auth/SecurityGate';
 
 export interface ToastMessage {
   id: string;
@@ -210,6 +211,9 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const syncWithCloud = async () => {
       try {
+        // Sync security settings & cloud excluded categories first
+        await syncCloudSecuritySettings();
+
         // Fetch categories
         const { data: cloudCats, error: catErr } = await supabase.from('categories').select('*');
         if (catErr) {
@@ -611,6 +615,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         excludedSet.delete(updatedCat.name);
       }
       saveExcludedCatIdsToStorage(excludedSet);
+      saveSecuritySettingsCloud(undefined, undefined, Array.from(excludedSet));
     }
 
     setCategories(prev => prev.map(c => (c.id === id ? updatedCat : c)));

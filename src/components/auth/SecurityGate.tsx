@@ -28,7 +28,7 @@ export function setSecurityLockEnabled(enabled: boolean) {
   localStorage.setItem('voca_security_enabled', enabled ? 'true' : 'false');
 }
 
-// Supabase Cloud Synchronized Security Settings
+// Supabase Cloud Synchronized Security & Excluded Categories Settings
 export async function syncCloudSecuritySettings(): Promise<{ pin: string; enabled: boolean }> {
   let pin = getSavedPin();
   let enabled = localStorage.getItem('voca_security_enabled') !== 'false';
@@ -54,6 +54,16 @@ export async function syncCloudSecuritySettings(): Promise<{ pin: string; enable
         }
         enabled = cloudEnabled;
         localStorage.setItem('voca_security_enabled', cloudEnabled ? 'true' : 'false');
+
+        // Parse excluded categories list from cloud settings
+        if (data.keywords[2]) {
+          try {
+            const arr = JSON.parse(data.keywords[2]);
+            if (Array.isArray(arr)) {
+              localStorage.setItem('voca_ledger_excluded_categories_v1', JSON.stringify(arr));
+            }
+          } catch (e) {}
+        }
       }
     } catch (e) {
       console.warn('Failed to fetch cloud security settings', e);
@@ -62,10 +72,23 @@ export async function syncCloudSecuritySettings(): Promise<{ pin: string; enable
   return { pin, enabled };
 }
 
-export async function saveSecuritySettingsCloud(newPin: string, enabled: boolean) {
-  const cleanPin = newPin.trim();
+export async function saveSecuritySettingsCloud(newPin?: string, enabled?: boolean, excludedList?: string[]) {
+  const cleanPin = (newPin !== undefined ? newPin : getSavedPin()).trim();
+  const isEnabled = enabled !== undefined ? enabled : isSecurityLockEnabled();
+
   localStorage.setItem('voca_security_pin', cleanPin);
-  localStorage.setItem('voca_security_enabled', enabled ? 'true' : 'false');
+  localStorage.setItem('voca_security_enabled', isEnabled ? 'true' : 'false');
+
+  let currentExcludedArr = excludedList;
+  if (!currentExcludedArr) {
+    try {
+      const saved = localStorage.getItem('voca_ledger_excluded_categories_v1');
+      if (saved) currentExcludedArr = JSON.parse(saved);
+    } catch (e) {}
+  }
+  if (!currentExcludedArr) {
+    currentExcludedArr = ['00000000-0000-0000-0000-000000000009', '이체/저축'];
+  }
 
   const supabase = getSupabaseClient();
   if (supabase) {
@@ -77,7 +100,7 @@ export async function saveSecuritySettingsCloud(newPin: string, enabled: boolean
           type: '이체',
           icon: '🔒',
           color: '#000000',
-          keywords: [cleanPin, enabled ? 'true' : 'false'],
+          keywords: [cleanPin, isEnabled ? 'true' : 'false', JSON.stringify(currentExcludedArr)],
           is_default: false,
         },
       ]);
