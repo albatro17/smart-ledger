@@ -298,31 +298,37 @@ export function getInitialTransactions(): Transaction[] {
     },
   ];
 
-  return rawList.map((item) => {
-    const hash = generateTransactionHash(
-      item.date,
-      item.time,
-      item.payment,
-      item.amount,
-      item.desc
-    );
-    return {
-      id: generateUUID(),
-      category_id: item.catId,
-      category: item.category,
-      transaction_date: item.date,
-      transaction_time: item.time,
-      flow_type: item.flow as any,
-      expense_nature: item.nature,
-      account_type: item.account,
-      payment_method: item.payment,
-      description: item.desc,
-      amount: item.amount,
-      payment_type: '일시불',
-      approval_status: '정상',
-      memo: '기본 샘플 내역',
-      unique_hash: hash,
-      created_at: new Date().toISOString(),
-    };
-  });
+  return rawList
+    .map((item) => {
+      const hash = generateTransactionHash(
+        item.date,
+        item.time,
+        item.payment,
+        item.amount,
+        item.desc
+      );
+      return {
+        id: generateUUID(),
+        category_id: item.catId,
+        category: item.category,
+        transaction_date: item.date,
+        transaction_time: item.time,
+        flow_type: item.flow as any,
+        expense_nature: item.nature,
+        account_type: item.account,
+        payment_method: item.payment,
+        description: item.desc,
+        amount: item.amount,
+        payment_type: '일시불',
+        approval_status: '정상',
+        memo: '기본 샘플 내역',
+        unique_hash: hash,
+        created_at: new Date().toISOString(),
+      };
+    })
+    .sort((a, b) => {
+      const d = b.transaction_date.localeCompare(a.transaction_date);
+      if (d !== 0) return d;
+      return (b.transaction_time || '').localeCompare(a.transaction_time || '');
+    });
 }

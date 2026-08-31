@@ -98,8 +98,20 @@ const AppContent: React.FC = () => {
     }
 
     result.sort((a, b) => {
-      if (filters.sortBy === 'date_desc') return b.transaction_date.localeCompare(a.transaction_date);
-      if (filters.sortBy === 'date_asc') return a.transaction_date.localeCompare(b.transaction_date);
+      if (filters.sortBy === 'date_desc') {
+        const d = (b.transaction_date || '').localeCompare(a.transaction_date || '');
+        if (d !== 0) return d;
+        const t = (b.transaction_time || '').localeCompare(a.transaction_time || '');
+        if (t !== 0) return t;
+        return (b.created_at || '').localeCompare(a.created_at || '');
+      }
+      if (filters.sortBy === 'date_asc') {
+        const d = (a.transaction_date || '').localeCompare(b.transaction_date || '');
+        if (d !== 0) return d;
+        const t = (a.transaction_time || '').localeCompare(b.transaction_time || '');
+        if (t !== 0) return t;
+        return (a.created_at || '').localeCompare(b.created_at || '');
+      }
       if (filters.sortBy === 'amount_desc') return b.amount - a.amount;
       if (filters.sortBy === 'amount_asc') return a.amount - b.amount;
       return 0;
