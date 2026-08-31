@@ -32,6 +32,50 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
     return categories.filter(c => c.is_excluded_from_total).map(c => c.name);
   }, [categories]);
 
+  // Per-excluded-category breakdown (amounts & counts)
+  const excludedCategoryBreakdown = useMemo(() => {
+    const map = new Map<string, { amount: number; count: number }>();
+
+    categories.forEach(c => {
+      if (c.is_excluded_from_total) {
+        map.set(c.id, { amount: 0, count: 0 });
+        map.set(c.name, { amount: 0, count: 0 });
+      }
+    });
+
+    currentMonthTransactions.forEach(t => {
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+      if (isExcluded && (t.flow_type === '지출' || t.flow_type === '이체')) {
+        const key = t.category_id && map.has(t.category_id) ? t.category_id : t.category;
+        const entry = map.get(key);
+        if (entry) {
+          entry.amount += t.amount;
+          entry.count += 1;
+        }
+      }
+    });
+
+    const seenNames = new Set<string>();
+    const result: Array<{ id: string; name: string; icon: string; color: string; amount: number; count: number }> = [];
+
+    categories.forEach(c => {
+      if (c.is_excluded_from_total && !seenNames.has(c.name)) {
+        seenNames.add(c.name);
+        const entry = map.get(c.id) || map.get(c.name);
+        result.push({
+          id: c.id,
+          name: c.name,
+          icon: c.icon || '🏷️',
+          color: c.color || '#F59E0B',
+          amount: entry ? entry.amount : 0,
+          count: entry ? entry.count : 0,
+        });
+      }
+    });
+
+    return result;
+  }, [categories, currentMonthTransactions, excludedCatMap]);
+
   const currentMetrics = useMemo(() => {
     let income = 0;
     let expense = 0;
@@ -237,6 +281,35 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           </div>
         </motion.div>
       </div>
+
+      {/* Excluded Categories Summary Widget (Renders briefly when categories are excluded) */}
+      {excludedCategoryBreakdown.length > 0 && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-sm">
+          <div className="flex items-center gap-2 font-bold">
+            <Ban className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <span>당월 집계 제외 항목 요약 ({excludedCategoryBreakdown.length}개 카테고리):</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {excludedCategoryBreakdown.map((item) => (
+              <span
+                key={item.id}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-amber-500/20 shadow-xs font-medium text-[11px]"
+              >
+                <span>{item.icon}</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
+                <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">
+                  ({item.amount > 0 ? `-${formatWon(item.amount)}` : '0원'})
+                </span>
+              </span>
+            ))}
+
+            <span className="font-mono font-black text-xs text-amber-600 dark:text-amber-400 bg-amber-500/20 px-2.5 py-1 rounded-xl border border-amber-500/30">
+              총 -{formatWon(currentMetrics.excludedExpense)} 제외
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Expense Nature Ratio Progress Gauge Bar */}
       <div className="p-4 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
