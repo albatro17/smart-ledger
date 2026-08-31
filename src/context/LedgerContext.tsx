@@ -289,10 +289,18 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const supabase = getSupabaseClient();
       if (supabase) {
         try {
+          if (categories.length > 0) {
+            await supabase.from('categories').upsert(categories);
+          }
           const { error } = await supabase.from('transactions').upsert(newTxs);
           if (error) {
-            console.error('Supabase upsert failed:', error);
-            addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase DB 오류: ${error.message}` });
+            if (error.code === '23503') {
+              const fallbackTxs = newTxs.map(t => ({ ...t, category_id: null }));
+              await supabase.from('transactions').upsert(fallbackTxs);
+            } else {
+              console.error('Supabase upsert failed:', error);
+              addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase DB 오류: ${error.message}` });
+            }
           }
         } catch (e) {
           console.error('Supabase bulk upsert failed', e);
@@ -351,10 +359,21 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
+        if (newTx.category_id) {
+          const targetCat = categories.find(c => c.id === newTx.category_id);
+          if (targetCat) {
+            await supabase.from('categories').upsert([targetCat]);
+          }
+        }
         const { error } = await supabase.from('transactions').upsert([newTx]);
         if (error) {
-          console.error('Supabase insert error:', error);
-          addToast({ type: 'warning', title: '클라우드 저장 경고', message: `Supabase DB 저장 실패: ${error.message}` });
+          if (error.code === '23503') {
+            const fallbackTx = { ...newTx, category_id: null };
+            await supabase.from('transactions').upsert([fallbackTx]);
+          } else {
+            console.error('Supabase insert error:', error);
+            addToast({ type: 'warning', title: '클라우드 저장 경고', message: `Supabase DB 저장 실패: ${error.message}` });
+          }
         }
       } catch (e) {
         console.error('Supabase single insert error', e);
@@ -374,10 +393,25 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
+        if (updatedTx.category_id) {
+          const targetCat = categories.find(c => c.id === updatedTx.category_id);
+          if (targetCat) {
+            await supabase.from('categories').upsert([targetCat]);
+          }
+        }
         const { error } = await supabase.from('transactions').upsert([updatedTx]);
         if (error) {
-          console.error('Supabase upsert error:', error);
-          addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
+          if (error.code === '23503') {
+            const fallbackTx = { ...updatedTx, category_id: null };
+            const { error: retryErr } = await supabase.from('transactions').upsert([fallbackTx]);
+            if (retryErr) {
+              console.error('Supabase retry upsert error:', retryErr);
+              addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${retryErr.message}` });
+            }
+          } else {
+            console.error('Supabase upsert error:', error);
+            addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
+          }
         }
       } catch (e) {
         console.error('Supabase update error', e);
@@ -400,10 +434,21 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
+        if (updatedTx.category_id) {
+          const targetCat = categories.find(c => c.id === updatedTx.category_id);
+          if (targetCat) {
+            await supabase.from('categories').upsert([targetCat]);
+          }
+        }
         const { error } = await supabase.from('transactions').upsert([updatedTx]);
         if (error) {
-          console.error('Supabase toggle nature error:', error);
-          addToast({ type: 'warning', title: '클라우드 변경 경고', message: `Supabase DB 변경 실패: ${error.message}` });
+          if (error.code === '23503') {
+            const fallbackTx = { ...updatedTx, category_id: null };
+            await supabase.from('transactions').upsert([fallbackTx]);
+          } else {
+            console.error('Supabase toggle nature error:', error);
+            addToast({ type: 'warning', title: '클라우드 변경 경고', message: `Supabase DB 변경 실패: ${error.message}` });
+          }
         }
       } catch (e) {
         console.error('Supabase toggle expense nature error', e);
