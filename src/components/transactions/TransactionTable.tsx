@@ -75,8 +75,165 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
         </div>
       )}
 
-      {/* Main Table Container (No truncation, wrapping layout) */}
-      <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden glass-panel shadow-sm">
+      {/* ------------------------------------------------------------- */}
+      {/* 1. MOBILE RESPONSIVE CARD VIEW (Visible only on < sm screens)   */}
+      {/* No horizontal scrolling needed! Fits 100% of mobile screen.   */}
+      {/* ------------------------------------------------------------- */}
+      <div className="block sm:hidden space-y-2.5">
+        {transactions.length === 0 ? (
+          <div className="p-8 text-center glass-panel border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400">
+            <p className="text-sm font-semibold">조건에 일치하는 거래내역이 없습니다.</p>
+            <p className="text-xs mt-1">상단 필터를 조정하거나 엑셀을 업로드 해보세요.</p>
+          </div>
+        ) : (
+          transactions.map((tx) => {
+            const catObj = tx.category_id ? categoryMap.get(tx.category_id) : undefined;
+            const isSelected = selectedIds.includes(tx.id);
+            const isFixed = (tx.expense_nature || (catObj?.default_expense_nature)) === '고정비';
+
+            return (
+              <div
+                key={tx.id}
+                className={`p-3.5 rounded-2xl border transition-all glass-panel shadow-sm space-y-2.5 ${
+                  isSelected
+                    ? 'border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 ring-1 ring-emerald-500'
+                    : 'border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80'
+                }`}
+              >
+                {/* Header Row: Checkbox, Date/Time, Flow Tag, Fixed/Variable Badge */}
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleToggleSelect(tx.id)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                    >
+                      {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-500" /> : <Square className="w-4 h-4" />}
+                    </button>
+                    <div className="font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                      <span>{tx.transaction_date}</span>
+                      {tx.transaction_time && (
+                        <span className="text-[10px] text-slate-400">({tx.transaction_time})</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        tx.flow_type === '지출'
+                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                          : tx.flow_type === '수입'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                          : 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border border-slate-500/20'
+                      }`}
+                    >
+                      {tx.flow_type}
+                    </span>
+
+                    {tx.flow_type === '지출' && (
+                      <button
+                        onClick={() => toggleExpenseNature(tx.id)}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                          isFixed
+                            ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                        }`}
+                      >
+                        {isFixed ? <Lock className="w-3 h-3 text-purple-500" /> : <Zap className="w-3 h-3 text-amber-500" />}
+                        {isFixed ? '고정비' : '단발성'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Body Row: Description & Amount */}
+                <div className="flex items-start justify-between gap-3 pt-0.5">
+                  <div className="flex-1 min-w-0">
+                    <h4
+                      onClick={() => setEditingTransaction(tx)}
+                      className="text-sm font-bold text-slate-900 dark:text-white cursor-pointer hover:text-emerald-500 break-keep leading-snug"
+                    >
+                      {tx.description}
+                    </h4>
+
+                    {/* Payment Method & Memo info */}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <span className="inline-flex items-center gap-1">
+                        <CreditCard className="w-3 h-3 text-slate-400" />
+                        {tx.payment_method}
+                      </span>
+                      {tx.memo && (
+                        <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                          💬 {tx.memo}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="font-mono font-black text-right text-base whitespace-nowrap pt-0.5">
+                    <span
+                      className={
+                        tx.flow_type === '수입'
+                          ? 'text-emerald-500 drop-shadow-sm'
+                          : 'text-rose-500 dark:text-rose-400 drop-shadow-sm'
+                      }
+                    >
+                      {formatCurrency(tx.amount, tx.flow_type)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom Row: Category Selector & Action Buttons */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
+                  <div className="flex items-center gap-1.5 flex-1">
+                    <span
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0"
+                      style={{ backgroundColor: `${catObj?.color || '#94A3B8'}20` }}
+                    >
+                      {catObj?.icon || '🏷️'}
+                    </span>
+                    <select
+                      value={tx.category_id || ''}
+                      onChange={(e) => handleInlineCategoryChange(tx.id, e.target.value)}
+                      className="px-2 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 max-w-[150px]"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon} {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setEditingTransaction(tx)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="상세 수정"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleSingleDelete(tx.id, tx.description)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                      title="즉시 삭제"
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-500/80 hover:text-rose-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 2. DESKTOP TABLE VIEW (Visible only on >= sm screens)         */}
+      {/* Full featured 10-column table view for PC/Tablet widescreen. */}
+      {/* ------------------------------------------------------------- */}
+      <div className="hidden sm:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden glass-panel shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
@@ -93,7 +250,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 <th className="py-3 px-3 min-w-[95px]">거래일자</th>
                 <th className="py-3 px-3 min-w-[70px]">유형</th>
                 <th className="py-3 px-3 min-w-[90px]">지출성격</th>
-                <th className="py-3 px-3 min-w-[200px]">거래내역명 (무손실)</th>
+                <th className="py-3 px-3 min-w-[200px]">거래내역명</th>
                 <th className="py-3 px-3 min-w-[130px] text-right">금액 (원)</th>
                 <th className="py-3 px-3 min-w-[150px]">카테고리</th>
                 <th className="py-3 px-3 min-w-[150px]">결제수단</th>
@@ -172,7 +329,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                         )}
                       </td>
 
-                      {/* Description (No Truncation - Full wrapping) */}
+                      {/* Description */}
                       <td
                         onClick={() => setEditingTransaction(tx)}
                         className="py-3.5 px-3 font-semibold text-slate-900 dark:text-white cursor-pointer hover:text-emerald-500 break-keep whitespace-normal leading-snug"
@@ -180,7 +337,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                         {tx.description}
                       </td>
 
-                      {/* Amount (Maximized Visibility & Bold Typography) */}
+                      {/* Amount */}
                       <td className="py-3.5 px-3 font-mono font-black text-right whitespace-nowrap text-base sm:text-lg">
                         <span
                           className={
@@ -216,7 +373,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                         </div>
                       </td>
 
-                      {/* Payment Method (No Truncation) */}
+                      {/* Payment Method */}
                       <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 break-keep whitespace-normal">
                         <div className="flex items-center gap-1">
                           <CreditCard className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
@@ -224,7 +381,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                         </div>
                       </td>
 
-                      {/* Memo (No Truncation) */}
+                      {/* Memo */}
                       <td className="py-3.5 px-3 text-slate-500 dark:text-slate-400 break-keep whitespace-normal">
                         {tx.memo || '-'}
                       </td>
