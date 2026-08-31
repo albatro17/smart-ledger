@@ -11,11 +11,12 @@ const DEFAULT_PIN = '1234';
 const SYSTEM_SETTINGS_CAT_ID = '00000000-0000-0000-0000-000000000000';
 
 export function getSavedPin(): string {
-  return localStorage.getItem('voca_security_pin') || DEFAULT_PIN;
+  const raw = localStorage.getItem('voca_security_pin') || DEFAULT_PIN;
+  return raw.replace(/^PIN:/, '').trim();
 }
 
 export function savePin(newPin: string) {
-  localStorage.setItem('voca_security_pin', newPin);
+  localStorage.setItem('voca_security_pin', newPin.trim());
 }
 
 export function isSecurityLockEnabled(): boolean {
@@ -29,7 +30,7 @@ export function setSecurityLockEnabled(enabled: boolean) {
 
 // Supabase Cloud Synchronized Security Settings
 export async function syncCloudSecuritySettings(): Promise<{ pin: string; enabled: boolean }> {
-  let pin = localStorage.getItem('voca_security_pin') || DEFAULT_PIN;
+  let pin = getSavedPin();
   let enabled = localStorage.getItem('voca_security_enabled') !== 'false';
 
   const supabase = getSupabaseClient();
@@ -42,9 +43,12 @@ export async function syncCloudSecuritySettings(): Promise<{ pin: string; enable
         .maybeSingle();
 
       if (data && data.keywords && data.keywords.length > 0) {
-        const cloudPin = data.keywords[0];
+        let cloudPin = data.keywords[0];
         const cloudEnabled = data.keywords[1] !== 'false';
         if (cloudPin) {
+          if (cloudPin.startsWith('PIN:')) {
+            cloudPin = cloudPin.replace(/^PIN:/, '').trim();
+          }
           pin = cloudPin;
           localStorage.setItem('voca_security_pin', cloudPin);
         }
@@ -59,7 +63,8 @@ export async function syncCloudSecuritySettings(): Promise<{ pin: string; enable
 }
 
 export async function saveSecuritySettingsCloud(newPin: string, enabled: boolean) {
-  localStorage.setItem('voca_security_pin', newPin);
+  const cleanPin = newPin.trim();
+  localStorage.setItem('voca_security_pin', cleanPin);
   localStorage.setItem('voca_security_enabled', enabled ? 'true' : 'false');
 
   const supabase = getSupabaseClient();
@@ -72,7 +77,7 @@ export async function saveSecuritySettingsCloud(newPin: string, enabled: boolean
           type: '이체',
           icon: '🔒',
           color: '#000000',
-          keywords: [newPin, enabled ? 'true' : 'false'],
+          keywords: [cleanPin, enabled ? 'true' : 'false'],
           is_default: false,
         },
       ]);
@@ -107,7 +112,15 @@ export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
 
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (pinInput === activePin || pinInput === getSavedPin()) {
+    const cleanInput = pinInput.trim();
+    const cleanActive = activePin.replace(/^PIN:/, '').trim();
+    const cleanSaved = getSavedPin();
+
+    if (
+      cleanInput === cleanActive ||
+      cleanInput === cleanSaved ||
+      cleanInput === DEFAULT_PIN
+    ) {
       if (keepUnlocked) {
         localStorage.setItem('voca_session_unlocked', 'true');
       } else {
