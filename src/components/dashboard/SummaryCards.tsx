@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import type { Transaction } from '../../types';
 import { formatCurrency, formatWon } from '../../lib/utils';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Lock, Zap } from 'lucide-react';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, Lock, Zap, Ban } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useLedger } from '../../context/LedgerContext';
 
 interface SummaryCardsProps {
   currentMonthTransactions: Transaction[];
@@ -13,21 +14,46 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
   currentMonthTransactions,
   previousMonthTransactions,
 }) => {
+  const { categories } = useLedger();
+
+  // Map of excluded categories
+  const excludedCatMap = useMemo(() => {
+    const set = new Set<string>();
+    categories.forEach(c => {
+      if (c.is_excluded_from_total) {
+        set.add(c.name);
+        set.add(c.id);
+      }
+    });
+    return set;
+  }, [categories]);
+
+  const excludedCategoryNames = useMemo(() => {
+    return categories.filter(c => c.is_excluded_from_total).map(c => c.name);
+  }, [categories]);
+
   const currentMetrics = useMemo(() => {
     let income = 0;
     let expense = 0;
+    let excludedExpense = 0;
     let fixedExpense = 0;
     let variableExpense = 0;
 
     currentMonthTransactions.forEach(t => {
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+
       if (t.flow_type === '수입') {
         income += t.amount;
-      } else if (t.flow_type === '지출') {
-        expense += t.amount;
-        if (t.expense_nature === '고정비') {
-          fixedExpense += t.amount;
+      } else if (t.flow_type === '지출' || t.flow_type === '이체') {
+        if (isExcluded) {
+          excludedExpense += t.amount;
         } else {
-          variableExpense += t.amount;
+          expense += t.amount;
+          if (t.expense_nature === '고정비') {
+            fixedExpense += t.amount;
+          } else {
+            variableExpense += t.amount;
+          }
         }
       }
     });
@@ -35,18 +61,31 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
     const fixedRatio = expense > 0 ? Math.round((fixedExpense / expense) * 100) : 0;
     const variableRatio = expense > 0 ? Math.round((variableExpense / expense) * 100) : 0;
 
-    return { income, expense, net: income - expense, fixedExpense, variableExpense, fixedRatio, variableRatio };
-  }, [currentMonthTransactions]);
+    return {
+      income,
+      expense,
+      excludedExpense,
+      net: income - expense,
+      fixedExpense,
+      variableExpense,
+      fixedRatio,
+      variableRatio,
+    };
+  }, [currentMonthTransactions, excludedCatMap]);
 
   const prevMetrics = useMemo(() => {
     let income = 0;
     let expense = 0;
     previousMonthTransactions.forEach(t => {
-      if (t.flow_type === '수입') income += t.amount;
-      else if (t.flow_type === '지출') expense += t.amount;
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+      if (t.flow_type === '수입') {
+        income += t.amount;
+      } else if ((t.flow_type === '지출' || t.flow_type === '이체') && !isExcluded) {
+        expense += t.amount;
+      }
     });
     return { income, expense, net: income - expense };
-  }, [previousMonthTransactions]);
+  }, [previousMonthTransactions, excludedCatMap]);
 
   const expenseMoM = useMemo(() => {
     if (prevMetrics.expense === 0) return 0;
@@ -94,13 +133,15 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           </div>
         </motion.div>
 
-        {/* 2. 당월 총 지출 Card */}
+        {/* 2. 당월 총 지출 Card (Custom Excluded Category Filter Applied) */}
         <motion.div
           whileHover={{ y: -3 }}
           className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-rose-500 shadow-md"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">당월 총 지출</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              당월 총 지출 {excludedCategoryNames.length > 0 && <span className="text-[10px] text-amber-500 font-normal">(제외 적용됨)</span>}
+            </span>
             <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
               <TrendingDown className="w-5 h-5" />
             </div>
@@ -109,20 +150,36 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
             <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono">
               {formatCurrency(currentMetrics.expense, '지출')}
             </h3>
-            <div className="flex items-center gap-1.5 mt-2 text-xs">
-              {expenseMoM <= 0 ? (
-                <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
-                  <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
-                  {expenseMoM}% (절약)
-                </span>
-              ) : (
-                <span className="inline-flex items-center text-rose-500 font-bold">
-                  <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-                  +{expenseMoM}% (증가)
-                </span>
-              )}
-              <span className="text-slate-500 dark:text-slate-400">전월 대비</span>
+
+            <div className="flex items-center justify-between mt-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                {expenseMoM <= 0 ? (
+                  <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
+                    <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />
+                    {expenseMoM}% (절약)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center text-rose-500 font-bold">
+                    <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
+                    +{expenseMoM}% (증가)
+                  </span>
+                )}
+                <span className="text-slate-500 dark:text-slate-400">전월 대비</span>
+              </div>
             </div>
+
+            {/* Excluded Category Notice & Tooltip */}
+            {excludedCategoryNames.length > 0 && (
+              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-between font-medium">
+                <span className="flex items-center gap-1 truncate" title={`제외 카테고리: ${excludedCategoryNames.join(', ')}`}>
+                  <Ban className="w-3 h-3 flex-shrink-0" />
+                  제외: {excludedCategoryNames.join(', ')}
+                </span>
+                <span className="font-mono font-bold flex-shrink-0">
+                  -{formatWon(currentMetrics.excludedExpense)}
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -183,7 +240,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
 
       {/* Expense Nature Ratio Progress Gauge Bar */}
       <div className="p-4 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-        <div className="flex items-center justify-between text-xs font-bold">
+        <div className="flex items-center justify-between text-xs font-bold flex-wrap gap-2">
           <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
             📊 지출 성격 비중 분석 (고정비 vs 단발성)
           </span>

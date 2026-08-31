@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
     keywords TEXT[] DEFAULT '{}',
     is_default BOOLEAN DEFAULT false,
     default_expense_nature TEXT DEFAULT '변동비',
+    is_excluded_from_total BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     CONSTRAINT unique_user_category_name_type UNIQUE (user_id, name, type)
 );

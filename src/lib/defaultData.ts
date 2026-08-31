@@ -12,6 +12,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['스타벅스', '배달의민족', '배민', '식당', '초밥', '김밥', '올리브영간식', '마라탕', '카페', '투썸', '이디야', '맥도날드', '버거킹', '치킨', 'CU', 'GS25', '세븐일레븐', '한식', '중식', '일식'],
     is_default: true,
     default_expense_nature: '변동비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -23,6 +24,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['버스', '지하철', '택시', '카카오T', '주유', 'K-패스', 'K패스', '하이패스', '철도', '코레일', 'SRT', '티머니'],
     is_default: true,
     default_expense_nature: '고정비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -34,6 +36,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['관리비', '월세', '전기요금', '가스요금', 'KT', 'SKT', 'LGU+', '인터넷', '수도요금'],
     is_default: true,
     default_expense_nature: '고정비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -45,6 +48,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['쿠팡', '네이버페이', '11번가', 'G마켓', '무신사', '올리브영', '백화점', '이마트', '홈플러스', '다이소', '지그재그'],
     is_default: true,
     default_expense_nature: '변동비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -56,6 +60,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['넷플릭스', '유튜브', '영화', 'CGV', '메가박스', '스포티파이', '헬스', '운동', '도서', '교보문고', '스팀', '밀리의서재'],
     is_default: true,
     default_expense_nature: '고정비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -67,6 +72,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['병원', '약국', '치과', '의원', '내과', '한의원', '안과', '영양제'],
     is_default: true,
     default_expense_nature: '변동비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -77,6 +83,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     color: '#10B981',
     keywords: ['급여', '월급', '상여금', '주식배당', '이자', '환급금', '퇴직금'],
     is_default: true,
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -87,6 +94,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     color: '#06B6D4',
     keywords: ['용돈', '당근마켓', '중고나라', '선물', '포인트', '캐시백', '이벤트'],
     is_default: true,
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -98,6 +106,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: ['이체', '적금', '예금', '청약', '주식투자', '자산이전', '토스송금'],
     is_default: true,
     default_expense_nature: '고정비',
+    is_excluded_from_total: true, // 🚫 기본값: 총 지출 집계에서 제외 (자산 이동)
     created_at: new Date().toISOString(),
   },
   {
@@ -109,6 +118,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
     keywords: [],
     is_default: true,
     default_expense_nature: '변동비',
+    is_excluded_from_total: false,
     created_at: new Date().toISOString(),
   },
 ];

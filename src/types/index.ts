@@ -14,6 +14,7 @@ export interface Category {
   keywords: string[];
   is_default: boolean;
   default_expense_nature?: ExpenseNature;
+  is_excluded_from_total?: boolean; // 🚫 당월 총 지출 집계 제외 여부
   created_at: string;
 }
 

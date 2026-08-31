@@ -25,15 +25,31 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ transactions, 
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
+  const excludedCatMap = useMemo(() => {
+    const set = new Set<string>();
+    categories.forEach(c => {
+      if (c.is_excluded_from_total) {
+        set.add(c.name);
+        set.add(c.id);
+      }
+    });
+    return set;
+  }, [categories]);
+
   const categoryColorMap = useMemo(() => {
     const map = new Map<string, string>();
     categories.forEach(c => map.set(c.name, c.color));
     return map;
   }, [categories]);
 
-  // 1. Donut Chart Data: Category Expenses
+  // 1. Donut Chart Data: Category Expenses (excluding categories marked as is_excluded_from_total)
   const categoryExpenseData = useMemo(() => {
-    const expenses = transactions.filter(t => t.flow_type === '지출');
+    const expenses = transactions.filter(t => {
+      if (t.flow_type !== '지출' && t.flow_type !== '이체') return false;
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+      return !isExcluded;
+    });
+
     const catMap = new Map<string, number>();
 
     expenses.forEach(t => {
@@ -51,11 +67,16 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ transactions, 
     });
 
     return result.sort((a, b) => b.value - a.value);
-  }, [transactions, categoryColorMap]);
+  }, [transactions, categoryColorMap, excludedCatMap]);
 
-  // 2. Fixed vs Variable Expense Breakdown Chart Data
+  // 2. Fixed vs Variable Expense Breakdown Chart Data (excluding categories marked as is_excluded_from_total)
   const expenseNatureData = useMemo(() => {
-    const expenses = transactions.filter(t => t.flow_type === '지출');
+    const expenses = transactions.filter(t => {
+      if (t.flow_type !== '지출' && t.flow_type !== '이체') return false;
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+      return !isExcluded;
+    });
+
     let fixed = 0;
     let variable = 0;
 
@@ -68,9 +89,9 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ transactions, 
       { name: '고정비 (통신·월세·저축 등)', value: fixed, color: '#A855F7' },
       { name: '단발성 (식비·쇼핑 등)', value: variable, color: '#F59E0B' },
     ];
-  }, [transactions]);
+  }, [transactions, excludedCatMap]);
 
-  // 3. Area Chart Data: Daily Spend & Income Trend
+  // 3. Area Chart Data: Daily Spend & Income Trend (excluding categories marked as is_excluded_from_total)
   const dailyTrendData = useMemo(() => {
     const dateMap = new Map<string, { date: string; income: number; expense: number }>();
 
@@ -78,16 +99,21 @@ export const FinancialCharts: React.FC<FinancialChartsProps> = ({ transactions, 
       const dateStr = t.transaction_date;
       if (!dateStr) return;
 
+      const isExcluded = excludedCatMap.has(t.category) || (t.category_id && excludedCatMap.has(t.category_id));
+
       if (!dateMap.has(dateStr)) {
         dateMap.set(dateStr, { date: dateStr, income: 0, expense: 0 });
       }
       const entry = dateMap.get(dateStr)!;
-      if (t.flow_type === '수입') entry.income += t.amount;
-      else if (t.flow_type === '지출') entry.expense += t.amount;
+      if (t.flow_type === '수입') {
+        entry.income += t.amount;
+      } else if ((t.flow_type === '지출' || t.flow_type === '이체') && !isExcluded) {
+        entry.expense += t.amount;
+      }
     });
 
     return Array.from(dateMap.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [transactions]);
+  }, [transactions, excludedCatMap]);
 
   const textColor = isDark ? '#94a3b8' : '#64748b';
   const gridColor = isDark ? '#334155' : '#e2e8f0';

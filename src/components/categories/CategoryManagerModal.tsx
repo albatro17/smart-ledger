@@ -3,7 +3,7 @@ import { Modal } from '../ui/Modal';
 import { useLedger } from '../../context/LedgerContext';
 import type { Category, FlowType } from '../../types';
 import { KeywordRuleEditor } from './KeywordRuleEditor';
-import { Settings, Plus, Edit2, Trash2, Palette, Check, ShieldAlert } from 'lucide-react';
+import { Settings, Plus, Edit2, Trash2, Palette, Check, ShieldAlert, Ban } from 'lucide-react';
 
 interface CategoryManagerModalProps {
   isOpen: boolean;
@@ -23,7 +23,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
   const [isDeleting, setIsDeleting] = useState(false);
   const [reassignTargetId, setReassignTargetId] = useState<string>('');
 
-  // Dynamically derive the selectedCategory from latest global categories array to prevent stale state overwrites
+  // Dynamically derive the selectedCategory from latest global categories array
   const selectedCategory = categories.find(c => c.id === selectedCategoryId) || null;
 
   // Form State
@@ -31,6 +31,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
   const [formType, setFormType] = useState<FlowType>('지출');
   const [formIcon, setFormIcon] = useState('🏷️');
   const [formColor, setFormColor] = useState('#3B82F6');
+  const [formIsExcludedFromTotal, setFormIsExcludedFromTotal] = useState(false);
 
   const filteredCategories = categories.filter(c => c.type === activeTab);
 
@@ -39,6 +40,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
     setFormType(activeTab);
     setFormIcon('🏷️');
     setFormColor('#10B981');
+    setFormIsExcludedFromTotal(false);
     setIsAdding(true);
     setIsEditing(false);
   };
@@ -49,6 +51,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
     setFormType(cat.type);
     setFormIcon(cat.icon);
     setFormColor(cat.color);
+    setFormIsExcludedFromTotal(cat.is_excluded_from_total || false);
     setIsEditing(true);
     setIsAdding(false);
   };
@@ -65,6 +68,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
         color: formColor,
         keywords: [],
         is_default: false,
+        is_excluded_from_total: formIsExcludedFromTotal,
       });
       setIsAdding(false);
     } else if (isEditing && selectedCategory) {
@@ -73,9 +77,17 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
         type: formType,
         icon: formIcon,
         color: formColor,
+        is_excluded_from_total: formIsExcludedFromTotal,
       });
       setIsEditing(false);
     }
+  };
+
+  const handleToggleCategoryExclusion = async (cat: Category, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await updateCategory(cat.id, {
+      is_excluded_from_total: !cat.is_excluded_from_total,
+    });
   };
 
   const handleDeleteConfirm = async () => {
@@ -90,7 +102,7 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
       isOpen={isOpen}
       onClose={onClose}
       title="카테고리 & 키워드 룰 관리"
-      subtitle="지출/수입 카테고리를 설정하고, 자동 분류 키워드를 매핑하세요."
+      subtitle="지출/수입 카테고리를 설정하고, 당월 총지출 계산 집계 제외 카테고리를 관리하세요."
       icon={<Settings className="w-5 h-5 text-emerald-500" />}
       maxWidth="2xl"
     >
@@ -163,6 +175,20 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
                   <option value="이체">이체</option>
                 </select>
               </div>
+            </div>
+
+            {/* Total Expense Exclusion Checkbox */}
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30">
+              <input
+                type="checkbox"
+                id="is_excluded_from_total_cb"
+                checked={formIsExcludedFromTotal}
+                onChange={(e) => setFormIsExcludedFromTotal(e.target.checked)}
+                className="w-4 h-4 text-emerald-500 rounded focus:ring-emerald-500 cursor-pointer"
+              />
+              <label htmlFor="is_excluded_from_total_cb" className="text-xs font-bold text-slate-800 dark:text-slate-200 cursor-pointer select-none">
+                🚫 당월 총 지출 계산 시 제외 (예: 이체/저축, 경비대납, 환급금 등)
+              </label>
             </div>
 
             {/* Icon Picker */}
@@ -308,13 +334,35 @@ export const CategoryManagerModal: React.FC<CategoryManagerModalProps> = ({ isOp
                         title={`Visual color: ${cat.color}`}
                       />
                     </div>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                      키워드 {cat.keywords?.length || 0}개 등록됨
-                    </span>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        키워드 {cat.keywords?.length || 0}개
+                      </span>
+                      {cat.is_excluded_from_total && (
+                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-300 flex items-center gap-0.5">
+                          <Ban className="w-2.5 h-2.5" />
+                          총지출 제외됨
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1">
+                  {/* 1-Click Total Expense Exclusion Toggle */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleCategoryExclusion(cat, e)}
+                    className={`p-1.5 rounded-lg text-xs font-bold transition-colors ${
+                      cat.is_excluded_from_total
+                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/30'
+                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                    title={cat.is_excluded_from_total ? '클릭 시 당월 총지출 집계에 다시 포함' : '클릭 시 당월 총지출 집계에서 제외'}
+                  >
+                    <Ban className="w-3.5 h-3.5" />
+                  </button>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
