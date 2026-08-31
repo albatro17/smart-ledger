@@ -157,7 +157,7 @@ export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
           <div>
             <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
               <Lock className="w-5 h-5 text-emerald-400" />
-              스마트 자산관리 보안 잠금
+              진영 현미 가계부 보안 잠금
             </h2>
             <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
               {isLoadingCloud ? (

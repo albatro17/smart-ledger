@@ -19,11 +19,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpen
         {/* Brand / Title */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white font-black text-lg">
-            S
+            진
           </div>
           <div>
             <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              Smart Ledger
+              진영 현미 가계부
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 PRO v2.5
               </span>
