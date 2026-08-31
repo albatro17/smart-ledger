@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Lock, Eye, EyeOff, KeyRound, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShieldCheck, Lock, Eye, EyeOff, KeyRound, CheckCircle2, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getSupabaseClient } from '../../lib/supabase';
 
 interface SecurityGateProps {
   onUnlock: () => void;
 }
 
 const DEFAULT_PIN = '1234';
+const SYSTEM_SETTINGS_CAT_ID = '00000000-0000-0000-0000-000000000000';
 
 export function getSavedPin(): string {
   return localStorage.getItem('voca_security_pin') || DEFAULT_PIN;
@@ -25,18 +27,87 @@ export function setSecurityLockEnabled(enabled: boolean) {
   localStorage.setItem('voca_security_enabled', enabled ? 'true' : 'false');
 }
 
+// Supabase Cloud Synchronized Security Settings
+export async function syncCloudSecuritySettings(): Promise<{ pin: string; enabled: boolean }> {
+  let pin = localStorage.getItem('voca_security_pin') || DEFAULT_PIN;
+  let enabled = localStorage.getItem('voca_security_enabled') !== 'false';
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      const { data } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('id', SYSTEM_SETTINGS_CAT_ID)
+        .maybeSingle();
+
+      if (data && data.keywords && data.keywords.length > 0) {
+        const cloudPin = data.keywords[0];
+        const cloudEnabled = data.keywords[1] !== 'false';
+        if (cloudPin) {
+          pin = cloudPin;
+          localStorage.setItem('voca_security_pin', cloudPin);
+        }
+        enabled = cloudEnabled;
+        localStorage.setItem('voca_security_enabled', cloudEnabled ? 'true' : 'false');
+      }
+    } catch (e) {
+      console.warn('Failed to fetch cloud security settings', e);
+    }
+  }
+  return { pin, enabled };
+}
+
+export async function saveSecuritySettingsCloud(newPin: string, enabled: boolean) {
+  localStorage.setItem('voca_security_pin', newPin);
+  localStorage.setItem('voca_security_enabled', enabled ? 'true' : 'false');
+
+  const supabase = getSupabaseClient();
+  if (supabase) {
+    try {
+      await supabase.from('categories').upsert([
+        {
+          id: SYSTEM_SETTINGS_CAT_ID,
+          name: 'system_security_settings',
+          type: '이체',
+          icon: '🔒',
+          color: '#000000',
+          keywords: [newPin, enabled ? 'true' : 'false'],
+          is_default: false,
+        },
+      ]);
+    } catch (e) {
+      console.error('Failed to save security settings to cloud', e);
+    }
+  }
+}
+
 export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
   const [pinInput, setPinInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [keepUnlocked, setKeepUnlocked] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [isShaking, setIsShaking] = useState(false);
+  const [activePin, setActivePin] = useState(getSavedPin());
+  const [isLoadingCloud, setIsLoadingCloud] = useState(true);
 
-  const correctPin = getSavedPin();
+  // Sync latest PIN from Supabase Cloud DB on component mount
+  useEffect(() => {
+    let isMounted = true;
+    syncCloudSecuritySettings().then(({ pin }) => {
+      if (isMounted) {
+        setActivePin(pin);
+        setIsLoadingCloud(false);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (pinInput === correctPin) {
+    if (pinInput === activePin || pinInput === getSavedPin()) {
       if (keepUnlocked) {
         localStorage.setItem('voca_session_unlocked', 'true');
       } else {
@@ -80,8 +151,15 @@ export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
               <Lock className="w-5 h-5 text-emerald-400" />
               스마트 자산관리 보안 잠금
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              가계부 데이터 보호를 위해 비밀번호를 입력해주세요.
+            <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
+              {isLoadingCloud ? (
+                <span className="flex items-center gap-1 text-emerald-400">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  클라우드 동기화 보안 비밀번호 확인 중...
+                </span>
+              ) : (
+                '가계부 데이터 보호를 위해 비밀번호를 입력해주세요.'
+              )}
             </p>
           </div>
         </div>
@@ -178,8 +256,9 @@ export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
         </form>
 
         {/* Initial Setup Hint */}
-        <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-500">
-          💡 초기 기본 비밀번호: <span className="font-mono font-bold text-emerald-400">1234</span> (입장 후 상단 🔒 보안 설정에서 변경 가능)
+        <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
+          <span>⚡ Supabase 클라우드 실시간 동기화 적용됨</span>
+          <span>기본 PIN: <strong className="text-emerald-400">1234</strong></span>
         </div>
       </motion.div>
     </div>

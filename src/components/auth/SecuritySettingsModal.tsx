@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { useLedger } from '../../context/LedgerContext';
 import {
   getSavedPin,
-  savePin,
   isSecurityLockEnabled,
-  setSecurityLockEnabled,
+  saveSecuritySettingsCloud,
+  syncCloudSecuritySettings,
 } from './SecurityGate';
-import { ShieldCheck, Lock, KeyRound, Check, LogOut, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, Lock, KeyRound, Check, LogOut, ShieldAlert, Cloud } from 'lucide-react';
 
 interface SecuritySettingsModalProps {
   isOpen: boolean;
@@ -26,23 +26,31 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   const [currentPinInput, setCurrentPinInput] = useState('');
   const [newPinInput, setNewPinInput] = useState('');
   const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [activePin, setActivePin] = useState(getSavedPin());
 
-  const currentPin = getSavedPin();
+  useEffect(() => {
+    if (isOpen) {
+      syncCloudSecuritySettings().then(({ pin, enabled: cloudEnabled }) => {
+        setActivePin(pin);
+        setEnabled(cloudEnabled);
+      });
+    }
+  }, [isOpen]);
 
-  const handleToggleEnable = (newVal: boolean) => {
+  const handleToggleEnable = async (newVal: boolean) => {
     setEnabled(newVal);
-    setSecurityLockEnabled(newVal);
+    await saveSecuritySettingsCloud(activePin, newVal);
     addToast({
       type: 'info',
-      title: '보안 잠금 설정',
-      message: newVal ? '보안 잠금 기능이 활성화되었습니다.' : '보안 잠금 기능이 비활성화되었습니다.',
+      title: '보안 잠금 클라우드 설정',
+      message: newVal ? '보안 잠금이 활성화되었습니다 (모든 기기 전역 동기화).' : '보안 잠금이 비활성화되었습니다 (모든 기기 전역 동기화).',
     });
   };
 
-  const handleChangePin = (e: React.FormEvent) => {
+  const handleChangePin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (currentPinInput !== currentPin) {
+    if (currentPinInput !== activePin && currentPinInput !== getSavedPin()) {
       addToast({ type: 'error', title: '비밀번호 오류', message: '현재 비밀번호가 일치하지 않습니다.' });
       return;
     }
@@ -57,12 +65,19 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
       return;
     }
 
-    savePin(newPinInput.trim());
+    const nextPin = newPinInput.trim();
+    await saveSecuritySettingsCloud(nextPin, enabled);
+    setActivePin(nextPin);
+
     setCurrentPinInput('');
     setNewPinInput('');
     setConfirmPinInput('');
 
-    addToast({ type: 'success', title: '비밀번호 변경 완료', message: '접속 보안 비밀번호가 변경되었습니다.' });
+    addToast({
+      type: 'success',
+      title: '클라우드 비밀번호 변경 완료',
+      message: '접속 보안 비밀번호가 변경되어 모든 브라우저 및 기기(모바일/PC)에 실시간 적용되었습니다.',
+    });
     onClose();
   };
 
@@ -70,12 +85,21 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="접속 보안 & 비밀번호 설정"
-      subtitle="가계부 앱 접속 시 사용할 비밀번호를 설정하거나 보안을 관리합니다."
+      title="접속 보안 & 클라우드 동기화 비밀번호 설정"
+      subtitle="어느 장소 어느 기기(모바일/PC)에서 접속하든 이 비밀번호가 전역 실시간 동기화됩니다."
       icon={<ShieldCheck className="w-5 h-5 text-emerald-500" />}
       maxWidth="lg"
     >
       <div className="space-y-6">
+        {/* Cloud Sync Status Badge */}
+        <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-between text-xs font-semibold text-cyan-600 dark:text-cyan-400">
+          <span className="flex items-center gap-1.5">
+            <Cloud className="w-4 h-4 text-cyan-500 animate-pulse" />
+            Supabase 클라우드 실시간 동기화 가동 중
+          </span>
+          <span className="text-[10px] text-cyan-500 font-mono">전역 브라우저 동기화</span>
+        </div>
+
         {/* Toggle Security ON/OFF */}
         <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
@@ -85,7 +109,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
             <div>
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">보안 잠금 게이트 활성화</h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                앱 접속 시 비밀번호 입력창을 노출하여 타인의 접근을 방지합니다.
+                어느 기기에서 접속하든 이 비밀번호를 입력해야 가계부 화면에 진입합니다.
               </p>
             </div>
           </div>
@@ -105,7 +129,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
         <form onSubmit={handleChangePin} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-3">
           <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
             <KeyRound className="w-4 h-4 text-emerald-500" />
-            비밀번호 / PIN 번호 변경
+            비밀번호 / PIN 번호 변경 (클라우드 즉시 반영)
           </h4>
 
           <div>
@@ -156,7 +180,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
               className="flex items-center gap-1 px-4 py-1.5 text-xs font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white shadow-md transition-all"
             >
               <Check className="w-3.5 h-3.5" />
-              비밀번호 변경 저장
+              비밀번호 변경 및 전역 동기화 저장
             </button>
           </div>
         </form>
