@@ -113,14 +113,9 @@ export const SecurityGate: React.FC<SecurityGateProps> = ({ onUnlock }) => {
   const handleUnlock = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanInput = pinInput.trim();
-    const cleanActive = activePin.replace(/^PIN:/, '').trim();
-    const cleanSaved = getSavedPin();
+    const targetPin = (activePin || getSavedPin() || DEFAULT_PIN).replace(/^PIN:/, '').trim();
 
-    if (
-      cleanInput === cleanActive ||
-      cleanInput === cleanSaved ||
-      cleanInput === DEFAULT_PIN
-    ) {
+    if (cleanInput === targetPin) {
       if (keepUnlocked) {
         localStorage.setItem('voca_session_unlocked', 'true');
       } else {
