@@ -63,6 +63,22 @@ const LEGACY_CAT_ID_MAP: Record<string, string> = {
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const STORAGE_EXCLUDED_CATS_KEY = 'voca_ledger_excluded_categories_v1';
+
+export function getExcludedCatIdsFromStorage(): Set<string> {
+  try {
+    const saved = localStorage.getItem(STORAGE_EXCLUDED_CATS_KEY);
+    if (saved) {
+      const arr: string[] = JSON.parse(saved);
+      return new Set(arr);
+    }
+  } catch (e) {}
+  return new Set(['00000000-0000-0000-0000-000000000009', '이체/저축']);
+}
+
+export function saveExcludedCatIdsToStorage(excludedSet: Set<string>) {
+  localStorage.setItem(STORAGE_EXCLUDED_CATS_KEY, JSON.stringify(Array.from(excludedSet)));
+}
 
 function sanitizeCategory(c: Category): Category {
   let validId = c.id;
@@ -71,7 +87,13 @@ function sanitizeCategory(c: Category): Category {
   } else if (!UUID_REGEX.test(c.id)) {
     validId = generateUUID();
   }
-  return { ...c, id: validId };
+
+  const excludedSet = getExcludedCatIdsFromStorage();
+  const isExcluded = c.is_excluded_from_total !== undefined
+    ? c.is_excluded_from_total
+    : (excludedSet.has(validId) || excludedSet.has(c.name));
+
+  return { ...c, id: validId, is_excluded_from_total: Boolean(isExcluded) };
 }
 
 function sanitizeTransaction(t: Transaction): Transaction {
@@ -162,6 +184,14 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     localStorage.setItem(STORAGE_CAT_KEY, JSON.stringify(categories));
+    const excludedSet = new Set<string>();
+    categories.forEach(c => {
+      if (c.is_excluded_from_total) {
+        excludedSet.add(c.id);
+        excludedSet.add(c.name);
+      }
+    });
+    saveExcludedCatIdsToStorage(excludedSet);
   }, [categories]);
 
   useEffect(() => {
@@ -185,7 +215,15 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (catErr) {
           console.warn('Supabase categories fetch error:', catErr);
         } else if (cloudCats && cloudCats.length > 0) {
-          setCategories(cloudCats.map(sanitizeCategory));
+          const excludedSet = getExcludedCatIdsFromStorage();
+          const merged = cloudCats.map(c => {
+            const sanitized = sanitizeCategory(c);
+            const isExcluded = c.is_excluded_from_total !== undefined
+              ? c.is_excluded_from_total
+              : (excludedSet.has(c.id) || excludedSet.has(c.name));
+            return { ...sanitized, is_excluded_from_total: Boolean(isExcluded) };
+          });
+          setCategories(merged);
         } else {
           // If cloud has 0 categories, seed current local categories into Supabase
           await supabase.from('categories').upsert(categories.map(sanitizeCategory));
@@ -562,6 +600,18 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             created_at: new Date().toISOString(),
           }
     );
+
+    if (updates.is_excluded_from_total !== undefined) {
+      const excludedSet = getExcludedCatIdsFromStorage();
+      if (updates.is_excluded_from_total) {
+        excludedSet.add(updatedCat.id);
+        excludedSet.add(updatedCat.name);
+      } else {
+        excludedSet.delete(updatedCat.id);
+        excludedSet.delete(updatedCat.name);
+      }
+      saveExcludedCatIdsToStorage(excludedSet);
+    }
 
     setCategories(prev => prev.map(c => (c.id === id ? updatedCat : c)));
 
