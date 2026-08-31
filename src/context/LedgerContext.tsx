@@ -88,6 +88,25 @@ function sanitizeTransaction(t: Transaction): Transaction {
   return { ...t, id: validId, category_id: validCatId };
 }
 
+async function safeUpsertCategories(supabase: any, cats: Category[]) {
+  if (!cats || cats.length === 0) return { error: null };
+  try {
+    const { error } = await supabase.from('categories').upsert(cats);
+    if (error && error.code === 'PGRST204') {
+      const sanitized = cats.map(c => {
+        const { is_excluded_from_total, ...rest } = c;
+        return rest;
+      });
+      const { error: retryErr } = await supabase.from('categories').upsert(sanitized);
+      return { error: retryErr };
+    }
+    return { error };
+  } catch (e: any) {
+    console.error('Safe category upsert failed', e);
+    return { error: e };
+  }
+}
+
 export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>(() => {
     const saved = localStorage.getItem(STORAGE_CAT_KEY);
@@ -290,7 +309,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (supabase) {
         try {
           if (categories.length > 0) {
-            await supabase.from('categories').upsert(categories);
+            await safeUpsertCategories(supabase, categories);
           }
           const { error } = await supabase.from('transactions').upsert(newTxs);
           if (error) {
@@ -362,7 +381,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (newTx.category_id) {
           const targetCat = categories.find(c => c.id === newTx.category_id);
           if (targetCat) {
-            await supabase.from('categories').upsert([targetCat]);
+            await safeUpsertCategories(supabase, [targetCat]);
           }
         }
         const { error } = await supabase.from('transactions').upsert([newTx]);
@@ -396,7 +415,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (updatedTx.category_id) {
           const targetCat = categories.find(c => c.id === updatedTx.category_id);
           if (targetCat) {
-            await supabase.from('categories').upsert([targetCat]);
+            await safeUpsertCategories(supabase, [targetCat]);
           }
         }
         const { error } = await supabase.from('transactions').upsert([updatedTx]);
@@ -437,7 +456,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (updatedTx.category_id) {
           const targetCat = categories.find(c => c.id === updatedTx.category_id);
           if (targetCat) {
-            await supabase.from('categories').upsert([targetCat]);
+            await safeUpsertCategories(supabase, [targetCat]);
           }
         }
         const { error } = await supabase.from('transactions').upsert([updatedTx]);
@@ -517,7 +536,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        await supabase.from('categories').upsert([newCat]);
+        await safeUpsertCategories(supabase, [newCat]);
       } catch (e) {
         console.error('Supabase add category error', e);
       }
@@ -553,7 +572,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const supabase = getSupabaseClient();
     if (supabase) {
       try {
-        const { error } = await supabase.from('categories').upsert([updatedCat]);
+        const { error } = await safeUpsertCategories(supabase, [updatedCat]);
         if (error) {
           console.error('Supabase update category error:', error);
           addToast({ type: 'warning', title: '카테고리 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
