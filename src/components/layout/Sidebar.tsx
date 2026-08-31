@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, ListFilter, Settings, UploadCloud, Cloud, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock } from 'lucide-react';
 import { useLedger } from '../../context/LedgerContext';
 
 interface SidebarProps {
@@ -7,6 +7,7 @@ interface SidebarProps {
   setActiveTab: (tab: 'dashboard' | 'transactions' | 'categories') => void;
   onOpenImport: () => void;
   onOpenAuth: () => void;
+  onOpenSecurity: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -14,6 +15,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setActiveTab,
   onOpenImport,
   onOpenAuth,
+  onOpenSecurity,
 }) => {
   const { isRealtimeConnected, resetToSampleData } = useLedger();
 
@@ -72,6 +74,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Quick Actions
           </div>
           <div className="space-y-1.5">
+            <button
+              onClick={onOpenSecurity}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+            >
+              <Lock className="w-4 h-4 text-emerald-500" />
+              접속 보안 & 비밀번호 설정
+            </button>
+
             <button
               onClick={onOpenImport}
               className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"

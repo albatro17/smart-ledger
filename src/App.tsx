@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { LedgerProvider, useLedger } from './context/LedgerContext';
 import { Header } from './components/layout/Header';
@@ -15,6 +15,8 @@ import { BulkImportModal } from './components/importer/BulkImportModal';
 import { CategoryManagerModal } from './components/categories/CategoryManagerModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { QuickAddModal } from './components/transactions/QuickAddModal';
+import { SecurityGate, isSecurityLockEnabled } from './components/auth/SecurityGate';
+import { SecuritySettingsModal } from './components/auth/SecuritySettingsModal';
 
 import { Plus, Settings } from 'lucide-react';
 
@@ -27,6 +29,23 @@ const AppContent: React.FC = () => {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+
+  // Security Gate State
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (!isSecurityLockEnabled()) return true;
+    const sessionVal = sessionStorage.getItem('voca_session_unlocked') || localStorage.getItem('voca_session_unlocked');
+    return sessionVal === 'true';
+  });
+
+  useEffect(() => {
+    if (isSecurityLockEnabled() && !isUnlocked) {
+      const sessionVal = sessionStorage.getItem('voca_session_unlocked') || localStorage.getItem('voca_session_unlocked');
+      if (sessionVal === 'true') {
+        setIsUnlocked(true);
+      }
+    }
+  }, [isUnlocked]);
 
   const prevMonthStr = useMemo(() => {
     const [y, m] = filters.month.split('-').map(Number);
@@ -89,6 +108,11 @@ const AppContent: React.FC = () => {
     return result;
   }, [transactions, filters]);
 
+  // If Security Lock is enabled and not unlocked, display Security Gate Lock Screen
+  if (isSecurityLockEnabled() && !isUnlocked) {
+    return <SecurityGate onUnlock={() => setIsUnlocked(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors selection:bg-emerald-500 selection:text-white">
       <ToastContainer />
@@ -96,6 +120,7 @@ const AppContent: React.FC = () => {
       <Header
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenImport={() => setIsImportOpen(true)}
+        onOpenSecurity={() => setIsSecurityModalOpen(true)}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto pb-24 lg:pb-8">
@@ -104,6 +129,7 @@ const AppContent: React.FC = () => {
           setActiveTab={setActiveTab}
           onOpenImport={() => setIsImportOpen(true)}
           onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenSecurity={() => setIsSecurityModalOpen(true)}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-x-hidden">
@@ -213,6 +239,12 @@ const AppContent: React.FC = () => {
       <QuickAddModal
         isOpen={isQuickAddOpen}
         onClose={() => setIsQuickAddOpen(false)}
+      />
+
+      <SecuritySettingsModal
+        isOpen={isSecurityModalOpen}
+        onClose={() => setIsSecurityModalOpen(false)}
+        onLockNow={() => setIsUnlocked(false)}
       />
     </div>
   );

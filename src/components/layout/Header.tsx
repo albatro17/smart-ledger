@@ -1,14 +1,15 @@
 import React from 'react';
 import { useLedger } from '../../context/LedgerContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Zap, Upload } from 'lucide-react';
+import { Sun, Moon, Zap, Upload, Lock } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuth: () => void;
   onOpenImport: () => void;
+  onOpenSecurity: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpenSecurity }) => {
   const { isRealtimeConnected } = useLedger();
   const { theme, toggleTheme } = useTheme();
 
@@ -35,6 +36,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport }) => {
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
+          {/* Security Settings Lock Button */}
+          <button
+            onClick={onOpenSecurity}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all"
+            title="접속 보안 & 비밀번호 설정"
+          >
+            <Lock className="w-3.5 h-3.5 text-emerald-500" />
+            <span className="hidden sm:inline">보안 설정</span>
+          </button>
+
           {/* Cloud Sync Live Status Badge */}
           <button
             onClick={onOpenAuth}
