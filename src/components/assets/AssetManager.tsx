@@ -413,9 +413,9 @@ export const AssetManager: React.FC = () => {
       </div>
 
       {/* Asset Allocation Chart & Summary Banner Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Asset Distribution Donut Chart */}
-        <div className="p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Asset Distribution Donut Chart (Compact & Sticky) */}
+        <div className="p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 lg:sticky lg:top-[77px]">
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -427,7 +427,7 @@ export const AssetManager: React.FC = () => {
               <span className="text-xs text-slate-400">자산 비중</span>
             </div>
 
-            <div className="h-60 relative">
+            <div className="h-56 relative">
               {chartData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-slate-400">
                   등록된 자산이 없습니다.
@@ -439,8 +439,8 @@ export const AssetManager: React.FC = () => {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
+                      innerRadius={50}
+                      outerRadius={75}
                       paddingAngle={4}
                       dataKey="value"
                     >
@@ -464,7 +464,7 @@ export const AssetManager: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
             {chartData.map((item) => (
               <div key={item.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -477,8 +477,8 @@ export const AssetManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Detailed Category Items Cards (2 Columns Layout) */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Detailed Category Items Cards (2-Column Sub-Grid Layout) */}
+        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
           {CATEGORY_LIST.map((catConfig) => {
             const catItems = assets.filter((a) => a.category === catConfig.key);
             const totalCatAmount = catItems.reduce((acc, curr) => acc + curr.amount, 0);
