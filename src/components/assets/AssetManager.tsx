@@ -4,16 +4,14 @@ import { formatWon, generateUUID } from '../../lib/utils';
 import { getSupabaseClient } from '../../lib/supabase';
 import {
   Building2,
-  Car,
-  PiggyBank,
   CreditCard,
-  Wallet,
   Plus,
   Edit2,
   Trash2,
   ShieldCheck,
   PieChart as PieIcon,
   TrendingUp,
+  Filter,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -27,54 +25,63 @@ const DEFAULT_SAMPLE_ASSETS: AssetItem[] = [
     id: 'asset-1',
     name: '아파트 (시세 감정가)',
     category: '부동산',
-    amount: 850000000,
+    amount: 1270000000,
     isLiability: false,
-    memo: '서울 성동구 아파트',
+    memo: '경기도 미사강변 리슈빌 아파트',
     updated_at: new Date().toISOString(),
   },
   {
     id: 'asset-2',
-    name: '제네시스 GV70 (중고 시세)',
+    name: '싼타페 (중고 시세)',
     category: '자동차',
-    amount: 45000000,
+    amount: 19000000,
     isLiability: false,
-    memo: '2023년식 무사고',
+    memo: '2018년식 무사고',
     updated_at: new Date().toISOString(),
   },
   {
     id: 'asset-3',
-    name: '개인연금저축 & IRP 계좌',
+    name: '우체국 개인연금',
     category: '개인연금',
-    amount: 32000000,
+    amount: 53180000,
     isLiability: false,
-    memo: '세액공제 연금 펀드 계좌',
+    memo: '우체국 개인연금 (대출 이용)',
     updated_at: new Date().toISOString(),
   },
   {
     id: 'asset-4',
-    name: '주택담보대출',
-    category: '대출',
-    amount: 250000000,
-    isLiability: true,
-    memo: '변동금리 3.85%',
+    name: '삼성증권 펀드/주식',
+    category: '개인연금',
+    amount: 52780000,
+    isLiability: false,
+    memo: '연금저축 펀드 계좌',
     updated_at: new Date().toISOString(),
   },
   {
     id: 'asset-5',
-    name: '마이너스 통장 & 신용대출',
+    name: '신용대출 1차',
     category: '대출',
-    amount: 20000000,
+    amount: 59200000,
     isLiability: true,
-    memo: '시중은행 신용대출',
+    memo: '변동금리 4.47%',
     updated_at: new Date().toISOString(),
   },
   {
     id: 'asset-6',
-    name: '주거래은행 예적금 & 비상금',
+    name: '신용대출 2차',
+    category: '대출',
+    amount: 10000000,
+    isLiability: true,
+    memo: '고정금리 4.24%',
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'asset-7',
+    name: '주거래 은행 비상금',
     category: '예적금/현금',
-    amount: 15000000,
+    amount: 9900000,
     isLiability: false,
-    memo: '파킹통장 및 정기예금',
+    memo: '파킹통장 현금',
     updated_at: new Date().toISOString(),
   },
 ];
@@ -94,6 +101,7 @@ export const AssetManager: React.FC = () => {
     return DEFAULT_SAMPLE_ASSETS;
   });
 
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<'ALL' | AssetCategory>('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<AssetItem | null>(null);
 
@@ -211,6 +219,12 @@ export const AssetManager: React.FC = () => {
     }));
   }, [assets]);
 
+  // Filtered Assets List
+  const filteredAssets = useMemo(() => {
+    if (activeCategoryFilter === 'ALL') return assets;
+    return assets.filter((a) => a.category === activeCategoryFilter);
+  }, [assets, activeCategoryFilter]);
+
   // Modal Open Handlers
   const handleOpenAddModal = (defaultCat: AssetCategory = '부동산') => {
     setEditingItem(null);
@@ -281,33 +295,25 @@ export const AssetManager: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const getCategoryIcon = (cat: AssetCategory) => {
+  const getCategoryBadge = (cat: AssetCategory) => {
     switch (cat) {
       case '부동산':
-        return <Building2 className="w-5 h-5 text-blue-500" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">🏠 부동산</span>;
       case '자동차':
-        return <Car className="w-5 h-5 text-emerald-500" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">🚗 자동차</span>;
       case '개인연금':
-        return <PiggyBank className="w-5 h-5 text-purple-500" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">📈 개인연금</span>;
       case '대출':
-        return <CreditCard className="w-5 h-5 text-rose-500" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">🏦 대출/부채</span>;
       case '예적금/현금':
-        return <Wallet className="w-5 h-5 text-amber-500" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">💰 예적금</span>;
       default:
-        return <ShieldCheck className="w-5 h-5 text-slate-400" />;
+        return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold bg-slate-500/10 text-slate-400 border border-slate-500/20">🏷️ 기타</span>;
     }
   };
 
-  const CATEGORY_LIST: Array<{ key: AssetCategory; title: string; desc: string }> = [
-    { key: '부동산', title: '🏠 부동산 (아파트·전세보증금 등)', desc: '소유 아파트, 주택, 자가 및 전월세 보증금' },
-    { key: '자동차', title: '🚗 자동차 (차량 시세)', desc: '현재 소유 차량 시세 가치' },
-    { key: '개인연금', title: '📈 개인연금 & 투자 (IRP·연금저축 등)', desc: '개인연금저축, IRP, 펀드, 주식 평가액' },
-    { key: '대출', title: '🏦 대출 & 부채 현황 (주담대·신용대출)', desc: '주택담보대출, 신용대출, 카드론 등 차입금' },
-    { key: '예적금/현금', title: '💰 예적금 & 현금 자산', desc: '은행 예적금, 파킹통장, 입출금 현금' },
-  ];
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Top Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -412,59 +418,57 @@ export const AssetManager: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Asset Allocation Chart & Summary Banner Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Asset Distribution Donut Chart (Compact & Sticky) */}
-        <div className="p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 lg:sticky lg:top-[77px]">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                  <PieIcon className="w-5 h-5" />
-                </div>
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">자산 구성 포트폴리오</h4>
+      {/* Balanced Portfolio & Category Summary Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Left: Compact Portfolio Chart (4 cols) */}
+        <div className="lg:col-span-4 p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+                <PieIcon className="w-4 h-4" />
               </div>
-              <span className="text-xs text-slate-400">자산 비중</span>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">자산 구성 비중</h4>
             </div>
-
-            <div className="h-56 relative">
-              {chartData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                  등록된 자산이 없습니다.
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      paddingAngle={4}
-                      dataKey="value"
-                    >
-                      {chartData.map((entry, idx) => (
-                        <Cell key={`asset-cell-${idx}`} fill={entry.color} stroke={isDark ? '#1e293b' : '#ffffff'} strokeWidth={2} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(val: any) => [formatWon(Number(val) || 0), '평가액']}
-                      contentStyle={{
-                        backgroundColor: isDark ? '#0f172a' : '#ffffff',
-                        borderColor: isDark ? '#334155' : '#cbd5e1',
-                        borderRadius: '12px',
-                        color: isDark ? '#ffffff' : '#0f172a',
-                        fontSize: '12px',
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
+            <span className="text-xs text-slate-400">포트폴리오</span>
           </div>
 
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+          <div className="h-48 relative">
+            {chartData.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-xs text-slate-400">
+                등록된 자산이 없습니다.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={65}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, idx) => (
+                      <Cell key={`asset-cell-${idx}`} fill={entry.color} stroke={isDark ? '#1e293b' : '#ffffff'} strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(val: any) => [formatWon(Number(val) || 0), '평가액']}
+                    contentStyle={{
+                      backgroundColor: isDark ? '#0f172a' : '#ffffff',
+                      borderColor: isDark ? '#334155' : '#cbd5e1',
+                      borderRadius: '12px',
+                      color: isDark ? '#ffffff' : '#0f172a',
+                      fontSize: '12px',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-1 text-xs">
             {chartData.map((item) => (
               <div key={item.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -477,97 +481,138 @@ export const AssetManager: React.FC = () => {
           </div>
         </div>
 
-        {/* Detailed Category Items Cards (2-Column Sub-Grid Layout) */}
-        <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
-          {CATEGORY_LIST.map((catConfig) => {
-            const catItems = assets.filter((a) => a.category === catConfig.key);
-            const totalCatAmount = catItems.reduce((acc, curr) => acc + curr.amount, 0);
+        {/* Right: Category Quick Summary Badges (8 cols) */}
+        <div className="lg:col-span-8 p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              카테고리별 자산/대출 요약
+            </h4>
+            <span className="text-xs text-slate-400">총 {assets.length}개 항목</span>
+          </div>
 
-            return (
-              <div
-                key={catConfig.key}
-                className="p-4 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-3"
-              >
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            {(['부동산', '자동차', '개인연금', '대출', '예적금/현금'] as const).map((cat) => {
+              const catItems = assets.filter((a) => a.category === cat);
+              const sum = catItems.reduce((acc, curr) => acc + curr.amount, 0);
+
+              return (
+                <div
+                  key={cat}
+                  onClick={() => setActiveCategoryFilter(activeCategoryFilter === cat ? 'ALL' : cat)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                    activeCategoryFilter === cat
+                      ? 'border-emerald-500 bg-emerald-500/10 shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800/80'
+                  }`}
+                >
                   <div className="flex items-center gap-2">
-                    {getCategoryIcon(catConfig.key)}
-                    <div>
-                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
-                        {catConfig.title}
-                      </h4>
-                      <p className="text-[11px] text-slate-400">{catConfig.desc}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
-                      {catConfig.key === '대출' ? `-${formatWon(totalCatAmount)}` : formatWon(totalCatAmount)}
+                    {getCategoryBadge(cat)}
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                      ({catItems.length}건)
                     </span>
-
-                    <button
-                      onClick={() => handleOpenAddModal(catConfig.key)}
-                      className="p-1 rounded-lg text-emerald-500 hover:bg-emerald-500/10 border border-emerald-500/20 transition-all text-xs font-bold flex items-center gap-1 px-2"
-                      title="추가"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      등록
-                    </button>
                   </div>
+                  <span className={`font-mono font-black text-xs ${cat === '대출' ? 'text-rose-500' : 'text-slate-900 dark:text-slate-100'}`}>
+                    {cat === '대출' ? `-${formatWon(sum)}` : formatWon(sum)}
+                  </span>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
-                {/* Items List */}
-                {catItems.length === 0 ? (
-                  <p className="text-xs text-slate-400 py-2 text-center">
-                    등록된 {catConfig.key} 항목이 없습니다. 우측 [등록] 버튼을 눌러 추가하세요.
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {catItems.map((item) => (
-                      <div
-                        key={item.id}
-                        className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
-                      >
-                        <div>
-                          <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                            {item.name}
-                            {item.isLiability && (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-500 font-bold">
-                                대출/부채
-                              </span>
-                            )}
-                          </div>
-                          {item.memo && <div className="text-[11px] text-slate-400 mt-0.5">💬 {item.memo}</div>}
-                        </div>
+      {/* Main Unified Balanced Assets & Liabilities Management Table */}
+      <div className="p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <Filter className="w-4 h-4 text-emerald-500" />
+              세부 자산 & 부채 항목 관리 목록
+            </h4>
+            <span className="text-xs text-slate-400 font-mono">({filteredAssets.length}건)</span>
+          </div>
 
-                        <div className="flex items-center gap-3">
-                          <span className={`font-mono font-black text-sm ${item.isLiability ? 'text-rose-500' : 'text-slate-900 dark:text-slate-100'}`}>
-                            {item.isLiability ? `-${formatWon(item.amount)}` : formatWon(item.amount)}
-                          </span>
+          {/* Category Filter Pills */}
+          <div className="flex items-center gap-1 flex-wrap text-xs">
+            {(['ALL', '부동산', '자동차', '개인연금', '대출', '예적금/현금'] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategoryFilter(cat)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                  activeCategoryFilter === cat
+                    ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {cat === 'ALL' ? '전체' : cat}
+              </button>
+            ))}
+          </div>
+        </div>
 
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleOpenEditModal(item)}
-                              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                              title="수정"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteItem(item.id)}
-                              className="p-1 text-slate-400 hover:text-rose-500"
-                              title="삭제"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
+        {/* Clean Items Table */}
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
+                <th className="py-3 px-4 w-28">구분</th>
+                <th className="py-3 px-4">자산 / 부채 항목명</th>
+                <th className="py-3 px-4 hidden md:table-cell">비고 / 메모</th>
+                <th className="py-3 px-4 text-right">평가 금액 (원)</th>
+                <th className="py-3 px-4 text-center w-20">관리</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredAssets.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400">
+                    등록된 항목이 없습니다. 상단 [+ 신규 자산/부채 추가] 버튼을 눌러보세요.
+                  </td>
+                </tr>
+              ) : (
+                filteredAssets.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                  >
+                    <td className="py-3 px-4">{getCategoryBadge(item.category)}</td>
+                    <td className="py-3 px-4">
+                      <span className="font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                        {item.name}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 hidden md:table-cell text-slate-500 dark:text-slate-400">
+                      {item.memo || '-'}
+                    </td>
+                    <td className="py-3 px-4 text-right whitespace-nowrap font-mono font-black text-sm">
+                      <span className={item.isLiability ? 'text-rose-500' : 'text-slate-900 dark:text-slate-100'}>
+                        {item.isLiability ? `-${formatWon(item.amount)}` : formatWon(item.amount)}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => handleOpenEditModal(item)}
+                          className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                          title="수정"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteItem(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                          title="삭제"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -629,7 +674,7 @@ export const AssetManager: React.FC = () => {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    placeholder="예: 서울 아파트 시세, 제네시스 GV70, 주택담보대출"
+                    placeholder="예: 경기도 미사강변 리슈빌 아파트, 싼타페, 신용대출"
                     className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
@@ -663,7 +708,7 @@ export const AssetManager: React.FC = () => {
                     type="text"
                     value={formData.memo}
                     onChange={(e) => setFormData((prev) => ({ ...prev, memo: e.target.value }))}
-                    placeholder="예: 금리 3.8%, 2023년 매수 등"
+                    placeholder="예: 변동금리 4.47%, 2018년식 무사고 등"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
