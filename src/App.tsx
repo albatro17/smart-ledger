@@ -10,6 +10,7 @@ import { SummaryCards } from './components/dashboard/SummaryCards';
 import { FinancialCharts } from './components/dashboard/FinancialCharts';
 import { FilterToolbar } from './components/dashboard/FilterToolbar';
 import { TransactionTable } from './components/transactions/TransactionTable';
+import { FinancialCalendar } from './components/calendar/FinancialCalendar';
 
 import { BulkImportModal } from './components/importer/BulkImportModal';
 import { CategoryManagerModal } from './components/categories/CategoryManagerModal';
@@ -23,7 +24,7 @@ import { Plus, Settings } from 'lucide-react';
 const AppContent: React.FC = () => {
   const { transactions, categories, filters } = useLedger();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'categories'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'calendar' | 'transactions' | 'categories'>('dashboard');
 
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -149,11 +150,13 @@ const AppContent: React.FC = () => {
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 {activeTab === 'dashboard' && '자산 & 지출 대시보드'}
+                {activeTab === 'calendar' && '달력형 일별 수입·지출 가계부'}
                 {activeTab === 'transactions' && '가계부 거래내역 관리'}
                 {activeTab === 'categories' && '카테고리 & 키워드 룰셋 관리'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 {activeTab === 'dashboard' && '월별 지출 흐름, 고정비 vs 단발성 지출 비중 및 카테고리 시각화'}
+                {activeTab === 'calendar' && '달력 그리드에서 일별 지출/수입 손익 현황 조회 및 클릭하여 상세 내역 확인'}
                 {activeTab === 'transactions' && '검색, 필터, 수기 등록, 무손실 레이아웃 및 엑셀 일괄 관리'}
                 {activeTab === 'categories' && '사용자 정의 키워드 매핑 룰과 카테고리 색상/아이콘 설정'}
               </p>
@@ -192,6 +195,13 @@ const AppContent: React.FC = () => {
                 />
               </div>
             </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <FinancialCalendar
+              transactions={filteredTransactions}
+              categories={categories}
+            />
           )}
 
           {activeTab === 'transactions' && (
