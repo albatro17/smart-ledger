@@ -143,7 +143,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Primary KPI Metrics Grid */}
+      {/* Primary KPI Metrics Grid (4 Clean Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* 1. 당월 총 수입 Card */}
         <motion.div
@@ -177,7 +177,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           </div>
         </motion.div>
 
-        {/* 2. 당월 총 지출 Card (Custom Excluded Category Filter Applied) */}
+        {/* 2. 당월 총 지출 Card */}
         <motion.div
           whileHover={{ y: -3 }}
           className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-rose-500 shadow-md"
@@ -211,19 +211,6 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
                 <span className="text-slate-500 dark:text-slate-400">전월 대비</span>
               </div>
             </div>
-
-            {/* Excluded Category Notice & Tooltip */}
-            {excludedCategoryNames.length > 0 && (
-              <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-amber-600 dark:text-amber-400 flex items-center justify-between font-medium">
-                <span className="flex items-center gap-1 truncate" title={`제외 카테고리: ${excludedCategoryNames.join(', ')}`}>
-                  <Ban className="w-3 h-3 flex-shrink-0" />
-                  제외: {excludedCategoryNames.join(', ')}
-                </span>
-                <span className="font-mono font-bold flex-shrink-0">
-                  -{formatWon(currentMetrics.excludedExpense)}
-                </span>
-              </div>
-            )}
           </div>
         </motion.div>
 
@@ -235,7 +222,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
               <Lock className="w-3.5 h-3.5 text-purple-500" />
-              고정비 합계 (통신·월세·저축 등)
+              고정비 (통신·월세·저축 등)
             </span>
             <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300">
               {currentMetrics.fixedRatio}% 비중
@@ -262,7 +249,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
               <Zap className="w-3.5 h-3.5 text-amber-500" />
-              단발성(변동비) 지출 (식비·쇼핑 등)
+              단발성 (식비·쇼핑 등)
             </span>
             <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300">
               {currentMetrics.variableRatio}% 비중
@@ -282,7 +269,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         </motion.div>
       </div>
 
-      {/* Excluded Categories Summary Widget (Renders briefly when categories are excluded) */}
+      {/* Single Clean Excluded Categories Summary Banner (Rendered only when excluded items exist) */}
       {excludedCategoryBreakdown.length > 0 && (
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-sm">
           <div className="flex items-center gap-2 font-bold">
@@ -310,36 +297,6 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
           </div>
         </div>
       )}
-
-      {/* Expense Nature Ratio Progress Gauge Bar */}
-      <div className="p-4 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 space-y-2 shadow-sm">
-        <div className="flex items-center justify-between text-xs font-bold flex-wrap gap-2">
-          <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-            📊 지출 성격 비중 분석 (고정비 vs 단발성)
-          </span>
-          <div className="flex items-center gap-3">
-            <span className="text-purple-600 dark:text-purple-400 font-extrabold">
-              🔒 고정비: {formatWon(currentMetrics.fixedExpense)} ({currentMetrics.fixedRatio}%)
-            </span>
-            <span className="text-amber-600 dark:text-amber-400 font-extrabold">
-              ⚡ 단발성: {formatWon(currentMetrics.variableExpense)} ({currentMetrics.variableRatio}%)
-            </span>
-          </div>
-        </div>
-
-        <div className="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full flex overflow-hidden p-0.5 shadow-inner">
-          <div
-            className="bg-purple-500 h-full rounded-l-full transition-all duration-500"
-            style={{ width: `${currentMetrics.fixedRatio}%` }}
-            title={`고정비: ${currentMetrics.fixedRatio}%`}
-          />
-          <div
-            className="bg-amber-500 h-full rounded-r-full transition-all duration-500"
-            style={{ width: `${currentMetrics.variableRatio}%` }}
-            title={`단발성: ${currentMetrics.variableRatio}%`}
-          />
-        </div>
-      </div>
     </div>
   );
 };
