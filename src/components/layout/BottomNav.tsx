@@ -1,9 +1,9 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, ListFilter, Plus, UploadCloud, Settings } from 'lucide-react';
+import { LayoutDashboard, Calendar, Building2, ListFilter, Plus, UploadCloud, Settings } from 'lucide-react';
 
 interface BottomNavProps {
-  activeTab: 'dashboard' | 'calendar' | 'transactions' | 'categories';
-  setActiveTab: (tab: 'dashboard' | 'calendar' | 'transactions' | 'categories') => void;
+  activeTab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories';
+  setActiveTab: (tab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories') => void;
   onOpenQuickAdd: () => void;
   onOpenImport: () => void;
   onOpenCategories: () => void;
@@ -30,6 +30,19 @@ export const BottomNav: React.FC<BottomNavProps> = ({
         >
           <LayoutDashboard className="w-5 h-5" />
           <span className="text-[10px]">대시보드</span>
+        </button>
+
+        {/* Assets Tab */}
+        <button
+          onClick={() => setActiveTab('assets')}
+          className={`flex flex-col items-center gap-1 p-1.5 rounded-xl transition-all ${
+            activeTab === 'assets'
+              ? 'text-emerald-500 font-bold'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+          }`}
+        >
+          <Building2 className="w-5 h-5" />
+          <span className="text-[10px]">자산현황</span>
         </button>
 
         {/* Calendar Tab */}

@@ -1,10 +1,10 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock } from 'lucide-react';
+import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock } from 'lucide-react';
 import { useLedger } from '../../context/LedgerContext';
 
 interface SidebarProps {
-  activeTab: 'dashboard' | 'calendar' | 'transactions' | 'categories';
-  setActiveTab: (tab: 'dashboard' | 'calendar' | 'transactions' | 'categories') => void;
+  activeTab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories';
+  setActiveTab: (tab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories') => void;
   onOpenImport: () => void;
   onOpenAuth: () => void;
   onOpenSecurity: () => void;
@@ -29,6 +29,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'calendar',
       label: '달력 가계부',
       icon: Calendar,
+    },
+    {
+      id: 'assets',
+      label: '전체 자산 현황',
+      icon: Building2,
     },
     {
       id: 'transactions',

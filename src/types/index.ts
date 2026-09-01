@@ -91,3 +91,15 @@ export interface SupabaseConfig {
   anonKey: string;
   isConnected: boolean;
 }
+
+export type AssetCategory = '부동산' | '자동차' | '개인연금' | '대출' | '예적금/현금' | '기타';
+
+export interface AssetItem {
+  id: string;
+  name: string;
+  category: AssetCategory;
+  amount: number;
+  isLiability: boolean;
+  memo?: string;
+  updated_at: string;
+}
