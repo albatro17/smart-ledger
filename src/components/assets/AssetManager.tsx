@@ -334,78 +334,78 @@ export const AssetManager: React.FC = () => {
         </button>
       </div>
 
-      {/* Primary KPI Cards Grid (4 Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Primary KPI Cards Grid (4 Clean Equal-Height Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {/* 1. 순 자산 (Net Worth) */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel border-l-4 border-l-emerald-500 shadow-md relative overflow-hidden"
+          className="p-5 rounded-2xl glass-panel border-l-4 border-l-emerald-500 shadow-md relative overflow-hidden flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">내 순 자산 (Net Worth)</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">내 순 자산 (Net Worth)</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 flex-shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className={`text-2xl font-black tracking-tight font-mono ${metrics.netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
+            <h3 className={`text-2xl font-black tracking-tight font-mono whitespace-nowrap ${metrics.netWorth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600'}`}>
               {formatWon(metrics.netWorth)}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1">총 자산에서 부채를 뺀 실질 자산</p>
+            <p className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">총 자산에서 부채를 뺀 실질 자산</p>
           </div>
         </motion.div>
 
         {/* 2. 총 자산 (Total Assets) */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel border-l-4 border-l-blue-500 shadow-md relative overflow-hidden"
+          className="p-5 rounded-2xl glass-panel border-l-4 border-l-blue-500 shadow-md relative overflow-hidden flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">총 자산 (Total Assets)</span>
-            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">총 자산 (Total Assets)</span>
+            <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500 flex-shrink-0">
               <Building2 className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-blue-600 dark:text-blue-400 tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-blue-600 dark:text-blue-400 tracking-tight font-mono whitespace-nowrap">
               {formatWon(metrics.totalAssets)}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1">부동산·연금·차량·현금 합계</p>
+            <p className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">부동산·연금·차량·현금 합계</p>
           </div>
         </motion.div>
 
         {/* 3. 총 부채/대출 (Total Liabilities) */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel border-l-4 border-l-rose-500 shadow-md relative overflow-hidden"
+          className="p-5 rounded-2xl glass-panel border-l-4 border-l-rose-500 shadow-md relative overflow-hidden flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">총 대출 & 부채</span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">총 대출 & 부채</span>
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 flex-shrink-0">
               <CreditCard className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono whitespace-nowrap">
               -{formatWon(metrics.totalLiabilities)}
             </h3>
-            <p className="text-[11px] text-slate-400 mt-1">주담대·신용대출 총잔액</p>
+            <p className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">주담대·신용대출 총잔액</p>
           </div>
         </motion.div>
 
         {/* 4. 부채 비율 (Debt Ratio) */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel border-l-4 border-l-purple-500 shadow-md relative overflow-hidden"
+          className="p-5 rounded-2xl glass-panel border-l-4 border-l-purple-500 shadow-md relative overflow-hidden flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">부채 비율 (%)</span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">부채 비율 (%)</span>
+            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 whitespace-nowrap flex-shrink-0">
               {metrics.debtRatio}%
             </span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono whitespace-nowrap">
               {metrics.debtRatio}%
             </h3>
             <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -419,7 +419,7 @@ export const AssetManager: React.FC = () => {
       </div>
 
       {/* Balanced Portfolio & Category Summary Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
         {/* Left: Compact Portfolio Chart (4 cols) */}
         <div className="lg:col-span-4 p-5 rounded-2xl glass-panel border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
@@ -539,7 +539,7 @@ export const AssetManager: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setActiveCategoryFilter(cat)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border whitespace-nowrap ${
                   activeCategoryFilter === cat
                     ? 'bg-emerald-500 text-white border-emerald-500 shadow-xs'
                     : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -556,11 +556,11 @@ export const AssetManager: React.FC = () => {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800">
-                <th className="py-3 px-4 w-28">구분</th>
-                <th className="py-3 px-4">자산 / 부채 항목명</th>
-                <th className="py-3 px-4 hidden md:table-cell">비고 / 메모</th>
-                <th className="py-3 px-4 text-right">평가 금액 (원)</th>
-                <th className="py-3 px-4 text-center w-20">관리</th>
+                <th className="py-3 px-4 w-28 whitespace-nowrap">구분</th>
+                <th className="py-3 px-4 whitespace-nowrap">자산 / 부채 항목명</th>
+                <th className="py-3 px-4 hidden md:table-cell whitespace-nowrap">비고 / 메모</th>
+                <th className="py-3 px-4 text-right whitespace-nowrap">평가 금액 (원)</th>
+                <th className="py-3 px-4 text-center w-20 whitespace-nowrap">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -576,9 +576,9 @@ export const AssetManager: React.FC = () => {
                     key={item.id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    <td className="py-3 px-4">{getCategoryBadge(item.category)}</td>
-                    <td className="py-3 px-4">
-                      <span className="font-bold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                    <td className="py-3 px-4 whitespace-nowrap">{getCategoryBadge(item.category)}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">
                         {item.name}
                       </span>
                     </td>
