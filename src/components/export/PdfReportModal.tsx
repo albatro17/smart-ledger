@@ -311,29 +311,29 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
         </div>
 
         {/* 4 Major High-Level KPI Summary Bar */}
-        <div className="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-200 text-center">
-          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
-            <div className="text-[11px] font-bold text-emerald-800">당월 총 수입</div>
-            <div className="text-base sm:text-lg font-black text-emerald-700 font-mono mt-0.5">
+        <div className="grid grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-200 text-center items-stretch">
+          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-col justify-between">
+            <div className="text-[11px] font-bold text-emerald-800 whitespace-nowrap">당월 총 수입</div>
+            <div className="text-base sm:text-lg font-black text-emerald-700 font-mono mt-0.5 whitespace-nowrap">
               {formatCurrency(financialMetrics.income, '수입')}
             </div>
           </div>
-          <div className="p-3 bg-rose-50 rounded-xl border border-rose-200">
-            <div className="text-[11px] font-bold text-rose-800">당월 총 지출</div>
-            <div className="text-base sm:text-lg font-black text-rose-700 font-mono mt-0.5">
+          <div className="p-3 bg-rose-50 rounded-xl border border-rose-200 flex flex-col justify-between">
+            <div className="text-[11px] font-bold text-rose-800 whitespace-nowrap">당월 총 지출</div>
+            <div className="text-base sm:text-lg font-black text-rose-700 font-mono mt-0.5 whitespace-nowrap">
               {formatCurrency(financialMetrics.expense, '지출')}
             </div>
           </div>
-          <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-            <div className="text-[11px] font-bold text-blue-800">총 자산 평가액</div>
-            <div className="text-base sm:text-lg font-black text-blue-700 font-mono mt-0.5">
+          <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 flex flex-col justify-between">
+            <div className="text-[11px] font-bold text-blue-800 whitespace-nowrap">총 자산 평가액</div>
+            <div className="text-base sm:text-lg font-black text-blue-700 font-mono mt-0.5 whitespace-nowrap">
               {formatWon(assetMetrics.totalAssets)}
             </div>
           </div>
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-            <div className="text-[11px] font-bold text-slate-700">당월 잉여금(순이익)</div>
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div className="text-[11px] font-bold text-slate-700 whitespace-nowrap">당월 잉여금(순이익)</div>
             <div
-              className={`text-base sm:text-lg font-black font-mono mt-0.5 ${
+              className={`text-base sm:text-lg font-black font-mono mt-0.5 whitespace-nowrap ${
                 financialMetrics.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
               }`}
             >
@@ -354,34 +354,34 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             <h2 className="text-lg font-black text-slate-900">1. 당월 손익 및 지출 분석 (자산 대시보드)</h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50">
-              <span className="text-xs font-bold text-slate-500">당월 총 수입</span>
-              <div className="text-lg font-black text-emerald-600 font-mono mt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">당월 총 수입</span>
+              <div className="text-lg font-black text-emerald-600 font-mono mt-1 whitespace-nowrap">
                 {formatCurrency(financialMetrics.income, '수입')}
               </div>
             </div>
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50">
-              <span className="text-xs font-bold text-slate-500">당월 총 지출</span>
-              <div className="text-lg font-black text-rose-600 font-mono mt-1">
+            <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">당월 총 지출</span>
+              <div className="text-lg font-black text-rose-600 font-mono mt-1 whitespace-nowrap">
                 {formatCurrency(financialMetrics.expense, '지출')}
               </div>
             </div>
-            <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/50">
-              <div className="flex items-center justify-between text-xs font-bold text-purple-700">
-                <span>고정비 (월세·통신·저축)</span>
-                <span>{financialMetrics.fixedRatio}%</span>
+            <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/50 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs font-bold text-purple-700 gap-1">
+                <span className="whitespace-nowrap">고정비 지출</span>
+                <span className="whitespace-nowrap">{financialMetrics.fixedRatio}%</span>
               </div>
-              <div className="text-lg font-black text-slate-900 font-mono mt-1">
+              <div className="text-lg font-black text-slate-900 font-mono mt-1 whitespace-nowrap">
                 {formatCurrency(financialMetrics.fixedExpense, '지출')}
               </div>
             </div>
-            <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50">
-              <div className="flex items-center justify-between text-xs font-bold text-amber-700">
-                <span>단발성 (식비·쇼핑)</span>
-                <span>{financialMetrics.variableRatio}%</span>
+            <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 flex flex-col justify-between">
+              <div className="flex items-center justify-between text-xs font-bold text-amber-700 gap-1">
+                <span className="whitespace-nowrap">단발성 지출</span>
+                <span className="whitespace-nowrap">{financialMetrics.variableRatio}%</span>
               </div>
-              <div className="text-lg font-black text-slate-900 font-mono mt-1">
+              <div className="text-lg font-black text-slate-900 font-mono mt-1 whitespace-nowrap">
                 {formatCurrency(financialMetrics.variableExpense, '지출')}
               </div>
             </div>
@@ -392,13 +392,19 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">
               카테고리별 지출 순위 & 비중
             </h3>
-            <table className="w-full text-xs text-left border border-slate-200 border-collapse">
+            <table className="w-full text-xs text-left border border-slate-200 border-collapse table-fixed">
+              <colgroup>
+                <col />
+                <col style={{ width: '70px' }} />
+                <col style={{ width: '130px' }} />
+                <col style={{ width: '110px' }} />
+              </colgroup>
               <thead>
                 <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="py-2 px-3">카테고리명</th>
-                  <th className="py-2 px-3 text-center">건수</th>
-                  <th className="py-2 px-3 text-right">지출 금액 (원)</th>
-                  <th className="py-2 px-3 text-right">전체 지출 대비 비중</th>
+                  <th className="py-2 px-3 whitespace-nowrap">카테고리명</th>
+                  <th className="py-2 px-3 text-center whitespace-nowrap">건수</th>
+                  <th className="py-2 px-3 text-right whitespace-nowrap">지출 금액 (원)</th>
+                  <th className="py-2 px-3 text-right whitespace-nowrap">전체 지출 대비 비중</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -416,15 +422,15 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
                         : 0;
                     return (
                       <tr key={c.name} className="hover:bg-slate-50">
-                        <td className="py-2 px-3 font-bold flex items-center gap-1.5">
+                        <td className="py-2 px-3 font-bold flex items-center gap-1.5 whitespace-nowrap truncate">
                           <span>{c.icon}</span>
                           <span>{c.name}</span>
                         </td>
-                        <td className="py-2 px-3 text-center font-mono text-slate-600">{c.count}건</td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
+                        <td className="py-2 px-3 text-center font-mono text-slate-600 whitespace-nowrap">{c.count}건</td>
+                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-900 whitespace-nowrap">
                           {formatWon(c.amount)}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-700">
+                        <td className="py-2 px-3 text-right font-mono font-bold text-slate-700 whitespace-nowrap">
                           {pct}%
                         </td>
                       </tr>
@@ -522,39 +528,39 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50">
-              <div className="text-xs font-bold text-emerald-800">내 순 자산 (Net Worth)</div>
-              <div className="text-lg font-black text-emerald-700 font-mono mt-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch">
+            <div className="p-3 rounded-xl border border-emerald-300 bg-emerald-50 flex flex-col justify-between">
+              <div className="text-xs font-bold text-emerald-800 whitespace-nowrap">내 순 자산 (Net Worth)</div>
+              <div className="text-lg font-black text-emerald-700 font-mono mt-0.5 whitespace-nowrap">
                 {formatWon(assetMetrics.netWorth)}
               </div>
             </div>
-            <div className="p-3 rounded-xl border border-blue-300 bg-blue-50">
-              <div className="text-xs font-bold text-blue-800">총 자산 (Total Assets)</div>
-              <div className="text-lg font-black text-blue-700 font-mono mt-0.5">
+            <div className="p-3 rounded-xl border border-blue-300 bg-blue-50 flex flex-col justify-between">
+              <div className="text-xs font-bold text-blue-800 whitespace-nowrap">총 자산 (Total Assets)</div>
+              <div className="text-lg font-black text-blue-700 font-mono mt-0.5 whitespace-nowrap">
                 {formatWon(assetMetrics.totalAssets)}
               </div>
             </div>
-            <div className="p-3 rounded-xl border border-rose-300 bg-rose-50">
-              <div className="text-xs font-bold text-rose-800">총 대출 및 부채</div>
-              <div className="text-lg font-black text-rose-700 font-mono mt-0.5">
+            <div className="p-3 rounded-xl border border-rose-300 bg-rose-50 flex flex-col justify-between">
+              <div className="text-xs font-bold text-rose-800 whitespace-nowrap">총 대출 및 부채</div>
+              <div className="text-lg font-black text-rose-700 font-mono mt-0.5 whitespace-nowrap">
                 -{formatWon(assetMetrics.totalLiabilities)}
               </div>
             </div>
-            <div className="p-3 rounded-xl border border-purple-300 bg-purple-50">
-              <div className="text-xs font-bold text-purple-800">부채 비율 (%)</div>
-              <div className="text-lg font-black text-purple-700 font-mono mt-0.5">
+            <div className="p-3 rounded-xl border border-purple-300 bg-purple-50 flex flex-col justify-between">
+              <div className="text-xs font-bold text-purple-800 whitespace-nowrap">부채 비율 (%)</div>
+              <div className="text-lg font-black text-purple-700 font-mono mt-0.5 whitespace-nowrap">
                 {assetMetrics.debtRatio}%
               </div>
             </div>
           </div>
 
           {/* Asset Category Quick Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs items-stretch">
             {(['부동산', '자동차', '개인연금', '대출', '예적금/현금'] as const).map((cat) => (
-              <div key={cat} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50">
-                <div className="font-bold text-slate-600">{cat}</div>
-                <div className="font-mono font-black text-slate-900 mt-1">
+              <div key={cat} className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 flex flex-col justify-between">
+                <div className="font-bold text-slate-600 whitespace-nowrap">{cat}</div>
+                <div className="font-mono font-black text-slate-900 mt-1 whitespace-nowrap">
                   {cat === '대출'
                     ? `-${formatWon(assetMetrics.categoryBreakdown[cat])}`
                     : formatWon(assetMetrics.categoryBreakdown[cat])}
@@ -568,23 +574,29 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">
               세부 자산 & 대출 항목 명세표
             </h3>
-            <table className="w-full text-xs text-left border border-slate-200 border-collapse">
+            <table className="w-full text-xs text-left border border-slate-200 border-collapse table-fixed">
+              <colgroup>
+                <col style={{ width: '90px' }} />
+                <col style={{ width: '210px' }} />
+                <col />
+                <col style={{ width: '130px' }} />
+              </colgroup>
               <thead>
                 <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="py-2 px-3 w-28">구분</th>
-                  <th className="py-2 px-3">자산 / 부채 항목명</th>
-                  <th className="py-2 px-3">비고 / 메모</th>
-                  <th className="py-2 px-3 text-right">평가 금액 (원)</th>
+                  <th className="py-2 px-3 whitespace-nowrap">구분</th>
+                  <th className="py-2 px-3 whitespace-nowrap">자산 / 부채 항목명</th>
+                  <th className="py-2 px-3 whitespace-nowrap">비고 / 메모</th>
+                  <th className="py-2 px-3 text-right whitespace-nowrap">평가 금액 (원)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
                 {assets.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="py-2 px-3 font-bold text-slate-700">{item.category}</td>
-                    <td className="py-2 px-3 font-bold text-slate-900">{item.name}</td>
-                    <td className="py-2 px-3 text-slate-500">{item.memo || '-'}</td>
+                    <td className="py-2 px-3 font-bold text-slate-700 whitespace-nowrap">{item.category}</td>
+                    <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap truncate">{item.name}</td>
+                    <td className="py-2 px-3 text-slate-500 truncate">{item.memo || '-'}</td>
                     <td
-                      className={`py-2 px-3 text-right font-mono font-black ${
+                      className={`py-2 px-3 text-right font-mono font-black whitespace-nowrap ${
                         item.isLiability ? 'text-rose-600' : 'text-slate-900'
                       }`}
                     >
@@ -613,16 +625,25 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             </div>
           </div>
 
-          <table className="w-full text-xs text-left border border-slate-200 border-collapse">
+          <table className="w-full text-xs text-left border border-slate-200 border-collapse table-fixed">
+            <colgroup>
+              <col style={{ width: '62px' }} /> {/* 일자: 09.15 */}
+              <col style={{ width: '46px' }} /> {/* 유형: 지출/수입 */}
+              <col style={{ width: '50px' }} /> {/* 성격: 고정/단발 */}
+              <col />                            {/* 거래내역명: 최대 넓이 확장! */}
+              <col style={{ width: '100px' }} />{/* 카테고리 */}
+              <col style={{ width: '72px' }} /> {/* 결제수단: 축소 슬림화! */}
+              <col style={{ width: '100px' }} />{/* 금액 (원) */}
+            </colgroup>
             <thead>
               <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                <th className="py-2 px-2.5 w-20">일자</th>
-                <th className="py-2 px-2 w-14 text-center">유형</th>
-                <th className="py-2 px-2 w-16 text-center">성격</th>
-                <th className="py-2 px-2.5">거래내역명</th>
-                <th className="py-2 px-2.5 w-28">카테고리</th>
-                <th className="py-2 px-2.5 w-24">결제수단</th>
-                <th className="py-2 px-2.5 text-right w-28">금액 (원)</th>
+                <th className="py-2 px-1 text-center whitespace-nowrap">일자</th>
+                <th className="py-2 px-1 text-center whitespace-nowrap">유형</th>
+                <th className="py-2 px-1 text-center whitespace-nowrap">성격</th>
+                <th className="py-2 px-2.5 whitespace-nowrap">거래내역명</th>
+                <th className="py-2 px-1.5 whitespace-nowrap">카테고리</th>
+                <th className="py-2 px-1 text-center whitespace-nowrap">결제수단</th>
+                <th className="py-2 px-2 text-right whitespace-nowrap">금액 (원)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -635,12 +656,12 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
               ) : (
                 monthTransactions.map((tx) => (
                   <tr key={tx.id} className="hover:bg-slate-50">
-                    <td className="py-1.5 px-2.5 font-mono text-slate-600 whitespace-nowrap">
+                    <td className="py-1.5 px-1 font-mono text-center text-slate-600 whitespace-nowrap text-[11px]">
                       {tx.transaction_date.slice(5)}
                     </td>
-                    <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                    <td className="py-1.5 px-1 text-center whitespace-nowrap">
                       <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                        className={`px-1 py-0.5 rounded text-[10px] font-bold ${
                           tx.flow_type === '수입'
                             ? 'bg-emerald-100 text-emerald-800'
                             : tx.flow_type === '지출'
@@ -651,20 +672,20 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
                         {tx.flow_type}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2 text-center whitespace-nowrap text-[10px] font-bold text-slate-600">
+                    <td className="py-1.5 px-1 text-center whitespace-nowrap text-[10px] font-bold text-slate-600">
                       {tx.expense_nature || '-'}
                     </td>
-                    <td className="py-1.5 px-2.5 font-bold text-slate-900 break-keep">
+                    <td className="py-1.5 px-2.5 font-bold text-slate-900 break-keep leading-tight">
                       {tx.description}
                     </td>
-                    <td className="py-1.5 px-2.5 text-slate-700 whitespace-nowrap">
+                    <td className="py-1.5 px-1.5 text-slate-700 whitespace-nowrap truncate text-[11px]">
                       {tx.category}
                     </td>
-                    <td className="py-1.5 px-2.5 text-slate-600 whitespace-nowrap text-[11px]">
+                    <td className="py-1.5 px-1 text-center text-slate-500 whitespace-nowrap truncate text-[10.5px]" title={tx.payment_method}>
                       {tx.payment_method}
                     </td>
                     <td
-                      className={`py-1.5 px-2.5 text-right font-mono font-black whitespace-nowrap ${
+                      className={`py-1.5 px-2 text-right font-mono font-black whitespace-nowrap text-xs ${
                         tx.flow_type === '수입' ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
@@ -677,10 +698,13 @@ export const PdfReportModal: React.FC<PdfReportModalProps> = ({ isOpen, onClose 
             {monthTransactions.length > 0 && (
               <tfoot>
                 <tr className="bg-slate-100 font-bold text-xs border-t-2 border-slate-300">
-                  <td colSpan={4} className="py-2.5 px-3">
-                    총 {monthTransactions.length}건 거래 합계
+                  <td colSpan={3} className="py-2.5 px-1 text-center whitespace-nowrap text-[11px] text-slate-600">
+                    총 {monthTransactions.length}건
                   </td>
-                  <td colSpan={3} className="py-2.5 px-3 text-right font-mono space-x-3">
+                  <td className="py-2.5 px-2.5 font-bold text-slate-800 whitespace-nowrap">
+                    월간 누적 합계
+                  </td>
+                  <td colSpan={3} className="py-2.5 px-2 text-right font-mono whitespace-nowrap space-x-3 text-xs">
                     <span className="text-emerald-700">
                       수입: +{formatWon(financialMetrics.income)}
                     </span>
