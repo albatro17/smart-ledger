@@ -156,17 +156,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       {tx.description}
                     </h4>
 
-                    {/* Payment Method & Memo info */}
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      <span className="inline-flex items-center gap-1">
-                        <CreditCard className="w-3 h-3 text-slate-400" />
-                        {tx.payment_method}
-                      </span>
-                      {tx.memo && (
-                        <span className="text-[11px] text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                          💬 {tx.memo}
-                        </span>
-                      )}
+                    {/* Payment Method info */}
+                    <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <CreditCard className="w-3 h-3 text-slate-400" />
+                      <span>{tx.payment_method}</span>
                     </div>
                   </div>
 
@@ -253,14 +246,13 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 <th className="py-2.5 px-2 w-[110px] text-right whitespace-nowrap">금액 (원)</th>
                 <th className="py-2.5 px-2 w-[125px] whitespace-nowrap">카테고리</th>
                 <th className="py-2.5 px-2 w-[110px] whitespace-nowrap">결제수단</th>
-                <th className="py-2.5 px-2 hidden lg:table-cell w-[110px] whitespace-nowrap">메모</th>
                 <th className="py-2.5 px-2 w-16 text-center whitespace-nowrap">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/50 dark:bg-slate-900/50">
               {transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
                     <p className="text-sm font-semibold">조건에 일치하는 거래내역이 없습니다.</p>
                     <p className="text-xs mt-1">상단 필터를 조정하거나 엑셀을 업로드 해보세요.</p>
                   </td>
@@ -378,11 +370,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                           <CreditCard className="w-3 h-3 text-slate-400 flex-shrink-0" />
                           <span className="truncate">{tx.payment_method}</span>
                         </div>
-                      </td>
-
-                      {/* Memo (Hidden on small desktop, visible on large screens) */}
-                      <td className="py-2.5 px-2 text-slate-500 dark:text-slate-400 hidden lg:table-cell text-[11px] truncate max-w-[100px]">
-                        {tx.memo || '-'}
                       </td>
 
                       {/* Direct Trash Delete Action */}
