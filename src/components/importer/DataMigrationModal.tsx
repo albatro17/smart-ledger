@@ -267,10 +267,10 @@ export const DataMigrationModal: React.FC<DataMigrationModalProps> = ({ isOpen, 
           <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs space-y-1.5">
             <div className="flex items-center gap-1.5 font-bold">
               <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span>기존 주소에서 새 주소(jinyoung-ledger)로 데이터 옮기는 방법</span>
+              <span>모바일 엑셀 데이터 PC 동기화 & 도메인 이전 가이드</span>
             </div>
             <p className="text-[11px] leading-relaxed">
-              웹 브라우저는 도메인(주소)별로 데이터 저장소가 독립적으로 나뉩니다. 기존 주소(smart-ledger-wine) 접속 기기에서 백업 받으신 후 새 주소에서 [복원] 하시거나 [클라우드 동기화]를 누르시면 1초 만에 100% 복구됩니다!
+              모바일 브라우저에서 업로드한 엑셀 파일은 모바일 저장소에 안전하게 보관됩니다. PC로 데이터를 보내려면 아래 <b>[JSON 백업 다운로드]</b> 후 PC에서 <b>[복원]</b> 하거나, <b>[Supabase RLS 해제]</b>를 진행하세요!
             </p>
           </div>
 
