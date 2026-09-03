@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock } from 'lucide-react';
+import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock, Database } from 'lucide-react';
 import { useLedger } from '../../context/LedgerContext';
 
 interface SidebarProps {
@@ -8,6 +8,7 @@ interface SidebarProps {
   onOpenImport: () => void;
   onOpenAuth: () => void;
   onOpenSecurity: () => void;
+  onOpenMigration: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -16,6 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenImport,
   onOpenAuth,
   onOpenSecurity,
+  onOpenMigration,
 }) => {
   const { isRealtimeConnected, resetToSampleData } = useLedger();
 
@@ -84,6 +86,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Quick Actions
           </div>
           <div className="space-y-1.5">
+            <button
+              onClick={onOpenMigration}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 transition-all"
+            >
+              <Database className="w-4 h-4 text-amber-500" />
+              데이터 복구 & 백업 (이전)
+            </button>
+
             <button
               onClick={onOpenSecurity}
               className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"

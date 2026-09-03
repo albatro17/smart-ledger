@@ -1,15 +1,16 @@
 import React from 'react';
 import { useLedger } from '../../context/LedgerContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Zap, Upload, Lock } from 'lucide-react';
+import { Sun, Moon, Zap, Upload, Lock, Database } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuth: () => void;
   onOpenImport: () => void;
   onOpenSecurity: () => void;
+  onOpenMigration: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpenSecurity }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpenSecurity, onOpenMigration }) => {
   const { isRealtimeConnected } = useLedger();
   const { theme, toggleTheme } = useTheme();
 
@@ -36,6 +37,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpen
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
+          {/* Data Migration & Backup Button */}
+          <button
+            onClick={onOpenMigration}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30 transition-all"
+            title="데이터 백업, 복원 및 기존 도메인 이전 도구"
+          >
+            <Database className="w-3.5 h-3.5 text-amber-500" />
+            <span className="hidden sm:inline">데이터 복구/백업</span>
+          </button>
+
           {/* Security Settings Lock Button */}
           <button
             onClick={onOpenSecurity}
