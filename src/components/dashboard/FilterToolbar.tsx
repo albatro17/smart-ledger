@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useLedger } from '../../context/LedgerContext';
-import { Calendar, Search, RefreshCcw, Download, Lock, Zap, SlidersHorizontal, ChevronDown, X } from 'lucide-react';
+import { Calendar, Search, RefreshCcw, Download, Lock, Zap, SlidersHorizontal, ChevronDown, X, FileText } from 'lucide-react';
 import { exportTransactionsToExcel } from '../../lib/utils';
 
-export const FilterToolbar: React.FC = () => {
+interface FilterToolbarProps {
+  onOpenPdfExport?: () => void;
+}
+
+export const FilterToolbar: React.FC<FilterToolbarProps> = ({ onOpenPdfExport }) => {
   const { filters, setFilters, resetFilters, categories, transactions } = useLedger();
   const [showDetailedFilters, setShowDetailedFilters] = useState(false);
 
@@ -129,6 +133,18 @@ export const FilterToolbar: React.FC = () => {
             <Download className="w-3.5 h-3.5 text-emerald-500" />
             <span className="hidden sm:inline">엑셀</span>
           </button>
+
+          {/* PDF Export */}
+          {onOpenPdfExport && (
+            <button
+              onClick={onOpenPdfExport}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 transition-colors"
+              title="종합 결산 PDF 변환 및 인쇄"
+            >
+              <FileText className="w-3.5 h-3.5 text-purple-500" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+          )}
 
           {/* Reset */}
           <button

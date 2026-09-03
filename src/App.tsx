@@ -20,6 +20,7 @@ import { QuickAddModal } from './components/transactions/QuickAddModal';
 import { SecurityGate, isSecurityLockEnabled } from './components/auth/SecurityGate';
 import { SecuritySettingsModal } from './components/auth/SecuritySettingsModal';
 import { DataMigrationModal } from './components/importer/DataMigrationModal';
+import { PdfReportModal } from './components/export/PdfReportModal';
 
 import { Plus, Settings } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const AppContent: React.FC = () => {
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [isMigrationOpen, setIsMigrationOpen] = useState(false);
+  const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
 
   // Security Gate State
   const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
@@ -137,6 +139,7 @@ const AppContent: React.FC = () => {
         onOpenImport={() => setIsImportOpen(true)}
         onOpenSecurity={() => setIsSecurityModalOpen(true)}
         onOpenMigration={() => setIsMigrationOpen(true)}
+        onOpenPdfExport={() => setIsPdfExportOpen(true)}
         onLockNow={() => setIsUnlocked(false)}
       />
 
@@ -147,6 +150,7 @@ const AppContent: React.FC = () => {
           onOpenImport={() => setIsImportOpen(true)}
           onOpenSecurity={() => setIsSecurityModalOpen(true)}
           onOpenMigration={() => setIsMigrationOpen(true)}
+          onOpenPdfExport={() => setIsPdfExportOpen(true)}
         />
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-x-hidden">
@@ -179,7 +183,7 @@ const AppContent: React.FC = () => {
             </div>
           </div>
 
-          <FilterToolbar />
+          <FilterToolbar onOpenPdfExport={() => setIsPdfExportOpen(true)} />
 
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
@@ -280,6 +284,11 @@ const AppContent: React.FC = () => {
       <DataMigrationModal
         isOpen={isMigrationOpen}
         onClose={() => setIsMigrationOpen(false)}
+      />
+
+      <PdfReportModal
+        isOpen={isPdfExportOpen}
+        onClose={() => setIsPdfExportOpen(false)}
       />
     </div>
   );

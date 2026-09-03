@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, RefreshCw, Lock, Database } from 'lucide-react';
+import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, RefreshCw, Lock, Database, FileText } from 'lucide-react';
 import { useLedger } from '../../context/LedgerContext';
 
 interface SidebarProps {
@@ -8,6 +8,7 @@ interface SidebarProps {
   onOpenImport: () => void;
   onOpenSecurity: () => void;
   onOpenMigration: () => void;
+  onOpenPdfExport: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -16,6 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenImport,
   onOpenSecurity,
   onOpenMigration,
+  onOpenPdfExport,
 }) => {
   const { isRealtimeConnected, resetToSampleData } = useLedger();
 
@@ -106,6 +108,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <UploadCloud className="w-4 h-4" />
               엑셀/CSV 일괄 업로드
+            </button>
+
+            <button
+              onClick={onOpenPdfExport}
+              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-purple-500/30 bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition-all"
+            >
+              <FileText className="w-4 h-4 text-purple-500" />
+              PDF 종합 보고서 발행
             </button>
           </div>
         </div>

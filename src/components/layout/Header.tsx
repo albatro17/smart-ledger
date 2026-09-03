@@ -1,11 +1,12 @@
 import React from 'react';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Upload, Lock, Database, LogOut } from 'lucide-react';
+import { Sun, Moon, Upload, Lock, Database, LogOut, FileText } from 'lucide-react';
 
 interface HeaderProps {
   onOpenImport: () => void;
   onOpenSecurity: () => void;
   onOpenMigration: () => void;
+  onOpenPdfExport: () => void;
   onLockNow: () => void;
 }
 
@@ -13,6 +14,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenImport,
   onOpenSecurity,
   onOpenMigration,
+  onOpenPdfExport,
   onLockNow,
 }) => {
   const { theme, toggleTheme } = useTheme();
@@ -77,6 +79,16 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Upload className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">엑셀 업로드</span>
+          </button>
+
+          {/* PDF Export Report Button */}
+          <button
+            onClick={onOpenPdfExport}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-extrabold border border-purple-500/30 transition-all active:scale-95 shadow-xs"
+            title="자산대시보드, 달력가계부, 전체자산, 거래내역 종합 PDF 변환 및 인쇄"
+          >
+            <FileText className="w-3.5 h-3.5 text-purple-500" />
+            <span className="hidden sm:inline">PDF 출력</span>
           </button>
 
           {/* Theme Toggle */}
