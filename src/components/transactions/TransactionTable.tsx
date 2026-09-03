@@ -238,7 +238,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="py-3 px-3 w-10 text-center">
+                <th className="py-3 px-3 w-10 text-center whitespace-nowrap">
                   <button onClick={handleSelectAll} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     {selectedIds.length > 0 && selectedIds.length === transactions.length ? (
                       <CheckSquare className="w-4 h-4 text-emerald-500" />
@@ -247,15 +247,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                     )}
                   </button>
                 </th>
-                <th className="py-3 px-3 min-w-[95px]">거래일자</th>
-                <th className="py-3 px-3 min-w-[70px]">유형</th>
-                <th className="py-3 px-3 min-w-[90px]">지출성격</th>
-                <th className="py-3 px-3 min-w-[200px]">거래내역명</th>
-                <th className="py-3 px-3 min-w-[130px] text-right">금액 (원)</th>
-                <th className="py-3 px-3 min-w-[150px]">카테고리</th>
-                <th className="py-3 px-3 min-w-[150px]">결제수단</th>
-                <th className="py-3 px-3 min-w-[120px]">메모</th>
-                <th className="py-3 px-3 w-20 text-center">관리</th>
+                <th className="py-3 px-3 min-w-[95px] whitespace-nowrap">거래일자</th>
+                <th className="py-3 px-3 min-w-[70px] whitespace-nowrap">유형</th>
+                <th className="py-3 px-3 min-w-[90px] whitespace-nowrap">지출성격</th>
+                <th className="py-3 px-3 min-w-[200px] whitespace-nowrap">거래내역명</th>
+                <th className="py-3 px-3 min-w-[130px] text-right whitespace-nowrap">금액 (원)</th>
+                <th className="py-3 px-3 min-w-[150px] whitespace-nowrap">카테고리</th>
+                <th className="py-3 px-3 min-w-[150px] whitespace-nowrap">결제수단</th>
+                <th className="py-3 px-3 min-w-[120px] whitespace-nowrap">메모</th>
+                <th className="py-3 px-3 w-20 text-center whitespace-nowrap">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/50 dark:bg-slate-900/50">

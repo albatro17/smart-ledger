@@ -143,24 +143,24 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Primary KPI Metrics Grid (4 Clean Cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Primary KPI Metrics Grid (4 Clean Balanced Cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {/* 1. 당월 총 수입 Card */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-emerald-500 shadow-md"
+          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-emerald-500 shadow-md flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">당월 총 수입</span>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">당월 총 수입</span>
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500 flex-shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight font-mono whitespace-nowrap">
               {formatCurrency(currentMetrics.income, '수입')}
             </h3>
-            <div className="flex items-center gap-1.5 mt-2 text-xs">
+            <div className="flex items-center gap-1.5 mt-2 text-xs whitespace-nowrap">
               {incomeMoM >= 0 ? (
                 <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
                   <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
@@ -180,22 +180,22 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         {/* 2. 당월 총 지출 Card */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-rose-500 shadow-md"
+          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-rose-500 shadow-md flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              당월 총 지출 {excludedCategoryNames.length > 0 && <span className="text-[10px] text-amber-500 font-normal">(제외 적용됨)</span>}
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+              당월 총 지출 {excludedCategoryNames.length > 0 && <span className="text-[10px] text-amber-500 font-bold">(제외 반영)</span>}
             </span>
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500">
+            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-500 flex-shrink-0">
               <TrendingDown className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-rose-600 dark:text-rose-400 tracking-tight font-mono whitespace-nowrap">
               {formatCurrency(currentMetrics.expense, '지출')}
             </h3>
 
-            <div className="flex items-center justify-between mt-2 text-xs">
+            <div className="flex items-center justify-between mt-2 text-xs whitespace-nowrap">
               <div className="flex items-center gap-1.5">
                 {expenseMoM <= 0 ? (
                   <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 font-bold">
@@ -217,19 +217,19 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         {/* 3. 고정비 합계 (비중 %) Card */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-purple-500 shadow-md"
+          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-purple-500 shadow-md flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Lock className="w-3.5 h-3.5 text-purple-500" />
-              고정비 (통신·월세·저축 등)
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 whitespace-nowrap">
+              <Lock className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
+              고정비 지출
             </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300">
+            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-purple-500/20 text-purple-600 dark:text-purple-300 whitespace-nowrap flex-shrink-0">
               {currentMetrics.fixedRatio}% 비중
             </span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono whitespace-nowrap">
               {formatCurrency(currentMetrics.fixedExpense, '지출')}
             </h3>
             <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -244,19 +244,19 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
         {/* 4. 단발성(변동비) 지출 합계 (비중 %) Card */}
         <motion.div
           whileHover={{ y: -3 }}
-          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-amber-500 shadow-md"
+          className="p-5 rounded-2xl glass-panel relative overflow-hidden group border-l-4 border-l-amber-500 shadow-md flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              단발성 (식비·쇼핑 등)
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1 whitespace-nowrap">
+              <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              단발성 지출
             </span>
-            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300">
+            <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 whitespace-nowrap flex-shrink-0">
               {currentMetrics.variableRatio}% 비중
             </span>
           </div>
           <div className="mt-3">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight font-mono whitespace-nowrap">
               {formatCurrency(currentMetrics.variableExpense, '지출')}
             </h3>
             <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
