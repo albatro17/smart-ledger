@@ -138,6 +138,7 @@ const AppContent: React.FC = () => {
         onOpenImport={() => setIsImportOpen(true)}
         onOpenSecurity={() => setIsSecurityModalOpen(true)}
         onOpenMigration={() => setIsMigrationOpen(true)}
+        onLockNow={() => setIsUnlocked(false)}
       />
 
       <div className="flex-1 flex max-w-7xl w-full mx-auto pb-24 lg:pb-8">

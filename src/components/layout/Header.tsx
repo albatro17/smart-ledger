@@ -1,16 +1,23 @@
 import React from 'react';
 import { useLedger } from '../../context/LedgerContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Zap, Upload, Lock, Database } from 'lucide-react';
+import { Sun, Moon, Zap, Upload, Lock, Database, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAuth: () => void;
   onOpenImport: () => void;
   onOpenSecurity: () => void;
   onOpenMigration: () => void;
+  onLockNow: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpenSecurity, onOpenMigration }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenAuth,
+  onOpenImport,
+  onOpenSecurity,
+  onOpenMigration,
+  onLockNow,
+}) => {
   const { isRealtimeConnected } = useLedger();
   const { theme, toggleTheme } = useTheme();
 
@@ -37,6 +44,16 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onOpenImport, onOpen
 
         {/* Header Actions */}
         <div className="flex items-center gap-2">
+          {/* Instant Lock Button */}
+          <button
+            onClick={onLockNow}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30 transition-all active:scale-95"
+            title="즉시 보안 잠금 화면으로 전환"
+          >
+            <LogOut className="w-3.5 h-3.5 text-rose-500" />
+            <span className="hidden sm:inline">즉시 잠금</span>
+          </button>
+
           {/* Data Migration & Backup Button */}
           <button
             onClick={onOpenMigration}
