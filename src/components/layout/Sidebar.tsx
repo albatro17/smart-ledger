@@ -1,12 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, Cloud, RefreshCw, Lock, Database } from 'lucide-react';
+import { LayoutDashboard, Calendar, Building2, ListFilter, Settings, UploadCloud, RefreshCw, Lock, Database } from 'lucide-react';
 import { useLedger } from '../../context/LedgerContext';
 
 interface SidebarProps {
   activeTab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories';
   setActiveTab: (tab: 'dashboard' | 'calendar' | 'assets' | 'transactions' | 'categories') => void;
   onOpenImport: () => void;
-  onOpenAuth: () => void;
   onOpenSecurity: () => void;
   onOpenMigration: () => void;
 }
@@ -15,7 +14,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   onOpenImport,
-  onOpenAuth,
   onOpenSecurity,
   onOpenMigration,
 }) => {
@@ -108,14 +106,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <UploadCloud className="w-4 h-4" />
               엑셀/CSV 일괄 업로드
-            </button>
-
-            <button
-              onClick={onOpenAuth}
-              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-semibold rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 hover:bg-cyan-500/20 transition-all"
-            >
-              <Cloud className="w-4 h-4" />
-              Supabase 클라우드 설정
             </button>
           </div>
         </div>

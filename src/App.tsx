@@ -134,7 +134,6 @@ const AppContent: React.FC = () => {
       <ToastContainer />
 
       <Header
-        onOpenAuth={() => setIsAuthOpen(true)}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenSecurity={() => setIsSecurityModalOpen(true)}
         onOpenMigration={() => setIsMigrationOpen(true)}
@@ -146,7 +145,6 @@ const AppContent: React.FC = () => {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onOpenImport={() => setIsImportOpen(true)}
-          onOpenAuth={() => setIsAuthOpen(true)}
           onOpenSecurity={() => setIsSecurityModalOpen(true)}
           onOpenMigration={() => setIsMigrationOpen(true)}
         />

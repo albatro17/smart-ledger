@@ -1,10 +1,8 @@
 import React from 'react';
-import { useLedger } from '../../context/LedgerContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Zap, Upload, Lock, Database, LogOut } from 'lucide-react';
+import { Sun, Moon, Upload, Lock, Database, LogOut } from 'lucide-react';
 
 interface HeaderProps {
-  onOpenAuth: () => void;
   onOpenImport: () => void;
   onOpenSecurity: () => void;
   onOpenMigration: () => void;
@@ -12,13 +10,11 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  onOpenAuth,
   onOpenImport,
   onOpenSecurity,
   onOpenMigration,
   onLockNow,
 }) => {
-  const { isRealtimeConnected } = useLedger();
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -72,21 +68,6 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Lock className="w-3.5 h-3.5 text-emerald-500" />
             <span className="hidden sm:inline">보안 설정</span>
-          </button>
-
-          {/* Cloud Sync Live Status Badge */}
-          <button
-            onClick={onOpenAuth}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-              isRealtimeConnected
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20'
-                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <Zap className={`w-3.5 h-3.5 ${isRealtimeConnected ? 'text-emerald-500 animate-pulse' : 'text-slate-400'}`} />
-            <span className="hidden md:inline">
-              {isRealtimeConnected ? 'Supabase Sync 가동 중' : '클라우드 동기화 설정'}
-            </span>
           </button>
 
           {/* Excel Upload Quick Action */}
