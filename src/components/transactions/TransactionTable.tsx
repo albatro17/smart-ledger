@@ -179,7 +179,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
 
                 {/* Bottom Row: Category Selector & Action Buttons */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs">
-                  <div className="flex items-center gap-1.5 flex-1">
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
                     <span
                       className="w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0"
                       style={{ backgroundColor: `${catObj?.color || '#94A3B8'}20` }}
@@ -189,7 +189,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                     <select
                       value={tx.category_id || ''}
                       onChange={(e) => handleInlineCategoryChange(tx.id, e.target.value)}
-                      className="px-2 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 max-w-[150px]"
+                      className="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 w-full cursor-pointer"
                     >
                       {categories.map((c) => (
                         <option key={c.id} value={c.id}>
@@ -244,7 +244,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                 <th className="py-2.5 px-2 w-[75px] text-center whitespace-nowrap">지출성격</th>
                 <th className="py-2.5 px-2 whitespace-nowrap">거래내역명</th>
                 <th className="py-2.5 px-2 w-[110px] text-right whitespace-nowrap">금액 (원)</th>
-                <th className="py-2.5 px-2 w-[125px] whitespace-nowrap">카테고리</th>
+                <th className="py-2.5 px-2 min-w-[145px] whitespace-nowrap">카테고리</th>
                 <th className="py-2.5 px-2 w-[110px] whitespace-nowrap">결제수단</th>
                 <th className="py-2.5 px-2 w-16 text-center whitespace-nowrap">관리</th>
               </tr>
@@ -342,8 +342,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       </td>
 
                       {/* Category Selector */}
-                      <td className="py-2.5 px-2">
-                        <div className="flex items-center gap-1">
+                      <td className="py-2.5 px-2 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           <span
                             className="w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0"
                             style={{ backgroundColor: `${catObj?.color || '#94A3B8'}20` }}
@@ -353,7 +353,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                           <select
                             value={tx.category_id || ''}
                             onChange={(e) => handleInlineCategoryChange(tx.id, e.target.value)}
-                            className="px-1.5 py-0.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 w-full max-w-[110px]"
+                            className="px-2 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 w-full min-w-[125px] cursor-pointer"
                           >
                             {categories.map((c) => (
                               <option key={c.id} value={c.id}>
