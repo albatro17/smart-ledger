@@ -21,7 +21,7 @@ import { SecurityGate, isSecurityLockEnabled } from './components/auth/SecurityG
 import { SecuritySettingsModal } from './components/auth/SecuritySettingsModal';
 import { DataMigrationModal } from './components/importer/DataMigrationModal';
 
-import { Plus, Settings, Database } from 'lucide-react';
+import { Plus, Settings } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const { transactions, categories, filters } = useLedger();
@@ -177,20 +177,6 @@ const AppContent: React.FC = () => {
                 수기 거래 등록
               </button>
             </div>
-          </div>
-
-          {/* Quick Domain Data Migration Banner */}
-          <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs shadow-xs">
-            <div className="flex items-center gap-2 font-bold">
-              <Database className="w-4 h-4 text-amber-500 flex-shrink-0" />
-              <span>💡 기존 주소(smart-ledger-wine)에서 작성하셨던 가계부 데이터 원복 및 이전이 필요하신가요?</span>
-            </div>
-            <button
-              onClick={() => setIsMigrationOpen(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-xs transition-all text-xs flex items-center justify-center gap-1.5 flex-shrink-0"
-            >
-              기존 데이터 원클릭 복구 & 이전하기
-            </button>
           </div>
 
           <FilterToolbar />
