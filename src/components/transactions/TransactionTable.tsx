@@ -230,15 +230,14 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 2. DESKTOP TABLE VIEW (Visible only on >= sm screens)         */}
-      {/* Full featured 10-column table view for PC/Tablet widescreen. */}
+      {/* 2. DESKTOP TABLE VIEW (Zero Horizontal Scroll Auto-Fit)       */}
       {/* ------------------------------------------------------------- */}
       <div className="hidden sm:block border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden glass-panel shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="w-full">
+          <table className="w-full text-left text-xs table-auto">
             <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-bold border-b border-slate-200 dark:border-slate-700">
               <tr>
-                <th className="py-3 px-3 w-10 text-center whitespace-nowrap">
+                <th className="py-2.5 px-2 w-8 text-center whitespace-nowrap">
                   <button onClick={handleSelectAll} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                     {selectedIds.length > 0 && selectedIds.length === transactions.length ? (
                       <CheckSquare className="w-4 h-4 text-emerald-500" />
@@ -247,15 +246,15 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                     )}
                   </button>
                 </th>
-                <th className="py-3 px-3 min-w-[95px] whitespace-nowrap">거래일자</th>
-                <th className="py-3 px-3 min-w-[70px] whitespace-nowrap">유형</th>
-                <th className="py-3 px-3 min-w-[90px] whitespace-nowrap">지출성격</th>
-                <th className="py-3 px-3 min-w-[200px] whitespace-nowrap">거래내역명</th>
-                <th className="py-3 px-3 min-w-[130px] text-right whitespace-nowrap">금액 (원)</th>
-                <th className="py-3 px-3 min-w-[150px] whitespace-nowrap">카테고리</th>
-                <th className="py-3 px-3 min-w-[150px] whitespace-nowrap">결제수단</th>
-                <th className="py-3 px-3 min-w-[120px] whitespace-nowrap">메모</th>
-                <th className="py-3 px-3 w-20 text-center whitespace-nowrap">관리</th>
+                <th className="py-2.5 px-2 w-[85px] whitespace-nowrap">거래일자</th>
+                <th className="py-2.5 px-2 w-[55px] text-center whitespace-nowrap">유형</th>
+                <th className="py-2.5 px-2 w-[75px] text-center whitespace-nowrap">지출성격</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">거래내역명</th>
+                <th className="py-2.5 px-2 w-[110px] text-right whitespace-nowrap">금액 (원)</th>
+                <th className="py-2.5 px-2 w-[125px] whitespace-nowrap">카테고리</th>
+                <th className="py-2.5 px-2 w-[110px] whitespace-nowrap">결제수단</th>
+                <th className="py-2.5 px-2 hidden lg:table-cell w-[110px] whitespace-nowrap">메모</th>
+                <th className="py-2.5 px-2 w-16 text-center whitespace-nowrap">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white/50 dark:bg-slate-900/50">
@@ -280,14 +279,14 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       }`}
                     >
                       {/* Checkbox */}
-                      <td className="py-3.5 px-3 text-center">
+                      <td className="py-2.5 px-2 text-center">
                         <button onClick={() => handleToggleSelect(tx.id)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
                           {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-500" /> : <Square className="w-4 h-4" />}
                         </button>
                       </td>
 
                       {/* Date */}
-                      <td className="py-3.5 px-3 whitespace-nowrap font-mono text-slate-600 dark:text-slate-400">
+                      <td className="py-2.5 px-2 whitespace-nowrap font-mono text-slate-600 dark:text-slate-400 text-xs">
                         <div>{tx.transaction_date}</div>
                         {tx.transaction_time && (
                           <div className="text-[10px] text-slate-400 font-mono">{tx.transaction_time}</div>
@@ -295,9 +294,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       </td>
 
                       {/* Flow Type */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
+                      <td className="py-2.5 px-2 whitespace-nowrap text-center">
                         <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                          className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
                             tx.flow_type === '지출'
                               ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                               : tx.flow_type === '수입'
@@ -310,20 +309,20 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       </td>
 
                       {/* Expense Nature Interactive Badge */}
-                      <td className="py-3.5 px-3 whitespace-nowrap">
+                      <td className="py-2.5 px-2 whitespace-nowrap text-center">
                         {tx.flow_type === '수입' ? (
                           <span className="text-[10px] text-slate-400 italic">-</span>
                         ) : (
                           <button
                             onClick={() => toggleExpenseNature(tx.id)}
                             title="클릭하여 고정비/단발성(변동비) 성격 변경"
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold transition-transform active:scale-95 border ${
+                            className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold transition-transform active:scale-95 border ${
                               isFixed
                                 ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/25'
                                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/25'
                             }`}
                           >
-                            {isFixed ? <Lock className="w-3 h-3 text-purple-500" /> : <Zap className="w-3 h-3 text-amber-500" />}
+                            {isFixed ? <Lock className="w-2.5 h-2.5 text-purple-500" /> : <Zap className="w-2.5 h-2.5 text-amber-500" />}
                             {isFixed ? '고정비' : '단발성'}
                           </button>
                         )}
@@ -332,13 +331,13 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       {/* Description */}
                       <td
                         onClick={() => setEditingTransaction(tx)}
-                        className="py-3.5 px-3 font-semibold text-slate-900 dark:text-white cursor-pointer hover:text-emerald-500 break-keep whitespace-normal leading-snug"
+                        className="py-2.5 px-2 font-semibold text-slate-900 dark:text-white cursor-pointer hover:text-emerald-500 break-keep leading-snug"
                       >
                         {tx.description}
                       </td>
 
                       {/* Amount */}
-                      <td className="py-3.5 px-3 font-mono font-black text-right whitespace-nowrap text-base sm:text-lg">
+                      <td className="py-2.5 px-2 font-mono font-black text-right whitespace-nowrap text-sm sm:text-base">
                         <span
                           className={
                             tx.flow_type === '수입'
@@ -351,10 +350,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       </td>
 
                       {/* Category Selector */}
-                      <td className="py-3.5 px-3">
-                        <div className="flex items-center gap-1.5">
+                      <td className="py-2.5 px-2">
+                        <div className="flex items-center gap-1">
                           <span
-                            className="w-6 h-6 rounded-md flex items-center justify-center text-xs flex-shrink-0"
+                            className="w-5 h-5 rounded-md flex items-center justify-center text-xs flex-shrink-0"
                             style={{ backgroundColor: `${catObj?.color || '#94A3B8'}20` }}
                           >
                             {catObj?.icon || '🏷️'}
@@ -362,7 +361,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                           <select
                             value={tx.category_id || ''}
                             onChange={(e) => handleInlineCategoryChange(tx.id, e.target.value)}
-                            className="px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 max-w-[130px]"
+                            className="px-1.5 py-0.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:ring-1 focus:ring-emerald-500 w-full max-w-[110px]"
                           >
                             {categories.map((c) => (
                               <option key={c.id} value={c.id}>
@@ -374,34 +373,34 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({ transactions
                       </td>
 
                       {/* Payment Method */}
-                      <td className="py-3.5 px-3 text-slate-700 dark:text-slate-300 break-keep whitespace-normal">
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                          <span>{tx.payment_method}</span>
+                      <td className="py-2.5 px-2 text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                        <div className="flex items-center gap-1 truncate max-w-[105px]">
+                          <CreditCard className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{tx.payment_method}</span>
                         </div>
                       </td>
 
-                      {/* Memo */}
-                      <td className="py-3.5 px-3 text-slate-500 dark:text-slate-400 break-keep whitespace-normal">
+                      {/* Memo (Hidden on small desktop, visible on large screens) */}
+                      <td className="py-2.5 px-2 text-slate-500 dark:text-slate-400 hidden lg:table-cell text-[11px] truncate max-w-[100px]">
                         {tx.memo || '-'}
                       </td>
 
                       {/* Direct Trash Delete Action */}
-                      <td className="py-3.5 px-3 text-center">
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => setEditingTransaction(tx)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="p-1 rounded-lg text-slate-400 hover:text-emerald-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                             title="상세 수정"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => handleSingleDelete(tx.id, tx.description)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                            className="p-1 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
                             title="즉시 삭제"
                           >
-                            <Trash2 className="w-4 h-4 text-rose-500/80 hover:text-rose-500" />
+                            <Trash2 className="w-3.5 h-3.5 text-rose-500/80 hover:text-rose-500" />
                           </button>
                         </div>
                       </td>
