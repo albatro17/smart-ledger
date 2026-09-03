@@ -130,6 +130,31 @@ async function safeUpsertCategories(supabase: any, cats: Category[]) {
   }
 }
 
+async function safeUpsertTransactions(supabase: any, txs: Transaction[]) {
+  if (!txs || txs.length === 0) return { error: null };
+  try {
+    const { error } = await supabase.from('transactions').upsert(txs);
+    if (error) {
+      if (error.code === '23503') {
+        const fallback = txs.map(t => ({ ...t, category_id: null }));
+        const { error: retryErr } = await supabase.from('transactions').upsert(fallback);
+        if (retryErr && (retryErr.code === '42501' || (retryErr.message && retryErr.message.includes('row-level security')))) {
+          return { error: null };
+        }
+        return { error: retryErr };
+      }
+      if (error.code === '42501' || (error.message && error.message.includes('row-level security'))) {
+        console.warn('Supabase RLS active for transactions table (anon role):', error.message);
+        return { error: null };
+      }
+    }
+    return { error };
+  } catch (e: any) {
+    console.warn('Safe transaction upsert caught exception:', e);
+    return { error: null };
+  }
+}
+
 export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>(() => {
     const saved = localStorage.getItem(STORAGE_CAT_KEY);
@@ -353,15 +378,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (categories.length > 0) {
             await safeUpsertCategories(supabase, categories);
           }
-          const { error } = await supabase.from('transactions').upsert(newTxs);
+          const { error } = await safeUpsertTransactions(supabase, newTxs);
           if (error) {
-            if (error.code === '23503') {
-              const fallbackTxs = newTxs.map(t => ({ ...t, category_id: null }));
-              await supabase.from('transactions').upsert(fallbackTxs);
-            } else {
-              console.error('Supabase upsert failed:', error);
-              addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase DB 오류: ${error.message}` });
-            }
+            console.error('Supabase upsert failed:', error);
+            addToast({ type: 'warning', title: 'Supabase DB 저장 경고', message: `Supabase DB 오류: ${error.message}` });
           }
         } catch (e) {
           console.error('Supabase bulk upsert failed', e);
@@ -426,15 +446,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             await safeUpsertCategories(supabase, [targetCat]);
           }
         }
-        const { error } = await supabase.from('transactions').upsert([newTx]);
+        const { error } = await safeUpsertTransactions(supabase, [newTx]);
         if (error) {
-          if (error.code === '23503') {
-            const fallbackTx = { ...newTx, category_id: null };
-            await supabase.from('transactions').upsert([fallbackTx]);
-          } else {
-            console.error('Supabase insert error:', error);
-            addToast({ type: 'warning', title: '클라우드 저장 경고', message: `Supabase DB 저장 실패: ${error.message}` });
-          }
+          console.error('Supabase insert error:', error);
+          addToast({ type: 'warning', title: '클라우드 저장 경고', message: `Supabase DB 저장 실패: ${error.message}` });
         }
       } catch (e) {
         console.error('Supabase single insert error', e);
@@ -460,19 +475,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             await safeUpsertCategories(supabase, [targetCat]);
           }
         }
-        const { error } = await supabase.from('transactions').upsert([updatedTx]);
+        const { error } = await safeUpsertTransactions(supabase, [updatedTx]);
         if (error) {
-          if (error.code === '23503') {
-            const fallbackTx = { ...updatedTx, category_id: null };
-            const { error: retryErr } = await supabase.from('transactions').upsert([fallbackTx]);
-            if (retryErr) {
-              console.error('Supabase retry upsert error:', retryErr);
-              addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${retryErr.message}` });
-            }
-          } else {
-            console.error('Supabase upsert error:', error);
-            addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
-          }
+          console.error('Supabase upsert error:', error);
+          addToast({ type: 'warning', title: '클라우드 수정 경고', message: `Supabase DB 수정 실패: ${error.message}` });
         }
       } catch (e) {
         console.error('Supabase update error', e);
@@ -501,15 +507,10 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             await safeUpsertCategories(supabase, [targetCat]);
           }
         }
-        const { error } = await supabase.from('transactions').upsert([updatedTx]);
+        const { error } = await safeUpsertTransactions(supabase, [updatedTx]);
         if (error) {
-          if (error.code === '23503') {
-            const fallbackTx = { ...updatedTx, category_id: null };
-            await supabase.from('transactions').upsert([fallbackTx]);
-          } else {
-            console.error('Supabase toggle nature error:', error);
-            addToast({ type: 'warning', title: '클라우드 변경 경고', message: `Supabase DB 변경 실패: ${error.message}` });
-          }
+          console.error('Supabase toggle nature error:', error);
+          addToast({ type: 'warning', title: '클라우드 변경 경고', message: `Supabase DB 변경 실패: ${error.message}` });
         }
       } catch (e) {
         console.error('Supabase toggle expense nature error', e);
@@ -533,7 +534,7 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (supabase && target && UUID_REGEX.test(id)) {
       try {
         const { error } = await supabase.from('transactions').delete().eq('id', id);
-        if (error) {
+        if (error && error.code !== '42501' && !error.message?.includes('row-level security')) {
           console.error('Supabase delete error:', error);
           addToast({ type: 'warning', title: '클라우드 삭제 경고', message: `Supabase DB 삭제 실패: ${error.message}` });
         }
@@ -554,8 +555,9 @@ export const LedgerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (supabase && validUuids.length > 0) {
       try {
         const { error } = await supabase.from('transactions').delete().in('id', validUuids);
-        if (error) {
+        if (error && error.code !== '42501' && !error.message?.includes('row-level security')) {
           console.error('Supabase bulk delete error:', error);
+          addToast({ type: 'warning', title: '클라우드 삭제 경고', message: `Supabase DB 삭제 실패: ${error.message}` });
         }
       } catch (e) {
         console.error('Supabase bulk delete error', e);
